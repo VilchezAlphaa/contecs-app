@@ -192,6 +192,7 @@ body {
   font-size: 12px;
   font-weight: 600;
 }
+.badge-nivel-6 { background: #1a1a2e; color: #fff; }
 .badge-nivel-5 { background: #e8d5f5; color: #6c3483; }
 .badge-nivel-4 { background: var(--verde-fondo); color: var(--verde-oscuro); }
 .badge-nivel-3 { background: #d5f5e3; color: #1e8449; }

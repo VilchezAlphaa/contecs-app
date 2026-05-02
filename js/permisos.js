@@ -9,11 +9,12 @@
 // 1 = Mínima autoridad
 
 export const ROLES = {
-  junta:          { label: "Junta Directiva",       nivel: 5, color: "#6C3483" },
+  ceo:            { label: "CEO / Desarrollador",    nivel: 6, color: "#1a1a2e" },
+  junta:          { label: "Junta Directiva",        nivel: 5, color: "#6C3483" },
   coordinador:    { label: "Coordinador",            nivel: 5, color: "#6C3483" },
   finanzas:       { label: "Líder de Finanzas",      nivel: 5, color: "#6C3483" },
   logistica:      { label: "Líder de Logística",     nivel: 5, color: "#6C3483" },
-  ventas:         { label: "Líder de Ventas",         nivel: 4, color: "#1A5276" },
+  ventas:         { label: "Líder de Ventas",        nivel: 4, color: "#1A5276" },
   secretario:     { label: "Secretario",             nivel: 4, color: "#1A5276" },
   actividades:    { label: "Líder de Actividades",   nivel: 3, color: "#1E8449" },
   patrocinios:    { label: "Líder de Patrocinios",   nivel: 3, color: "#1E8449" },
@@ -43,6 +44,7 @@ export const PERMISOS = {
 // Función para verificar si un rol tiene un permiso
 export function tienePermiso(rol, permiso) {
   if (!rol || !permiso) return false;
+  if (rol === "ceo") return true; // CEO tiene acceso a todo sin excepción
   return (PERMISOS[permiso] || []).includes(rol);
 }
 
