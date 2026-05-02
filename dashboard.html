@@ -3,22 +3,199 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CONTECS — Panel Principal</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <style>
+    .bienvenida {
+      background: linear-gradient(135deg, #1A5676, #2980B9);
+      color: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .bienvenida .saludo  { font-size: 13px; opacity: 0.85; }
+    .bienvenida .nombre  { font-size: 20px; font-weight: 700; margin: 2px 0 8px; }
+    .rol-pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .nivel-pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      margin-left: 6px;
+      opacity: 0.8;
+    }
+    .seccion-titulo {
+      font-size: 12px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 20px 0 10px;
+    }
+    .grid-modulos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .modulo-btn {
+      background: #fff;
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 20px 14px;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .modulo-btn:active { transform: scale(0.97); }
+    .modulo-btn .icono { font-size: 28px; line-height: 1; }
+    .modulo-btn .label { font-size: 13px; font-weight: 600; color: #2C3E50; line-height: 1.3; }
+    .modulo-btn.bloqueado {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .stat-valor { font-size: 20px; font-weight: 700; color: #1A5676; }
+    .stat-alerta { font-size: 20px; font-weight: 700; color: #C0392B; }
+    .stat-ok { font-size: 16px; font-weight: 700; color: #27AE60; }
+  </style>
 </head>
 <body>
   <div class="topbar">
     <h1>CONTECS</h1>
-    <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
+    <button class="btn-logout" id="btn-logout">Salir</button>
   </div>
+
   <div class="container">
-    <div class="card">
-      <div class="card-title">Módulo en construcción</div>
-      <p style="color:#888;font-size:14px;">Próximamente disponible.</p>
+
+    <!-- Bienvenida -->
+    <div class="bienvenida">
+      <div class="saludo">Bienvenido,</div>
+      <div class="nombre" id="nombre-usuario">...</div>
+      <span class="rol-pill" id="rol-label">...</span>
+      <span class="nivel-pill" id="nivel-label"></span>
     </div>
+
+    <!-- Mini stats (solo si tiene permiso) -->
+    <div class="mini-stats" id="mini-stats" style="display:none; margin-bottom:4px;">
+      <div class="stat-card">
+        <div class="stat-label">💰 Fondo actual</div>
+        <div class="stat-valor" id="stat-fondo">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⚠️ Stock bajo</div>
+        <div id="stat-alertas" class="stat-alerta">—</div>
+      </div>
+    </div>
+
+    <!-- Módulos -->
+    <div class="seccion-titulo">Módulos disponibles</div>
+    <div class="grid-modulos" id="grid-modulos">
+      <!-- Se genera dinámicamente según permisos -->
+    </div>
+
   </div>
+
   <script type="module">
-    import { guardRoute } from "./js/auth.js";
+    import { guardRoute, getUsuarioActual, cerrarSesion } from "./js/auth.js";
+    import { tienePermiso, infoRol } from "./js/permisos.js";
+    import { db } from "./js/firebase-config.js";
+    import {
+      doc, onSnapshot, collection, query, where
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
     guardRoute();
+
+    const usuario = getUsuarioActual();
+    const rol     = usuario.rol || "miembro";
+    const info    = infoRol(rol);
+
+    document.getElementById("nombre-usuario").textContent = usuario.nombre || "Usuario";
+    document.getElementById("rol-label").textContent      = info.label;
+    document.getElementById("nivel-label").textContent    = `Nivel ${info.nivel}`;
+
+    // Definición de todos los módulos con su permiso requerido
+    const MODULOS = [
+      { label: "Registrar Ventas",  icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas"  },
+      { label: "Inventario",        icono: "📦", href: "inventario.html", permiso: "ver_inventario"    },
+      { label: "Bitácora",          icono: "📋", href: "bitacora.html",   permiso: "ver_bitacora"      },
+      { label: "Reportes",          icono: "📈", href: "reportes.html",   permiso: "ver_reportes"      },
+      { label: "Compras",           icono: "🛒", href: "compras.html",    permiso: "registrar_compras" },
+      { label: "Fondos",            icono: "💳", href: "fondos.html",     permiso: "ver_fondos"        },
+      { label: "Catálogo",          icono: "🗂️", href: "catalogo.html",   permiso: "editar_catalogo"   },
+      { label: "Exportar",          icono: "📤", href: "exportar.html",   permiso: "exportar_datos"    },
+    ];
+
+    const grid = document.getElementById("grid-modulos");
+
+    MODULOS.forEach(mod => {
+      const tiene = tienePermiso(rol, mod.permiso);
+      const a = document.createElement("a");
+      a.href = tiene ? mod.href : "#";
+      a.className = "modulo-btn" + (tiene ? "" : " bloqueado");
+      a.innerHTML = `<span class="icono">${mod.icono}</span><span class="label">${mod.label}</span>`;
+      grid.appendChild(a);
+    });
+
+    // Stats en tiempo real (solo para quienes pueden ver fondos o inventario)
+    if (tienePermiso(rol, "ver_fondos") || tienePermiso(rol, "ver_inventario")) {
+      document.getElementById("mini-stats").style.display = "grid";
+    }
+
+    if (tienePermiso(rol, "ver_fondos")) {
+      onSnapshot(doc(db, "fondos", "principal"), (snap) => {
+        if (snap.exists()) {
+          const b = snap.data().balance ?? 0;
+          document.getElementById("stat-fondo").textContent =
+            "₡" + b.toLocaleString("es-CR", { minimumFractionDigits: 2 });
+        }
+      });
+    }
+
+    if (tienePermiso(rol, "ver_inventario")) {
+      onSnapshot(query(collection(db, "productos"), where("activo", "==", true)), (snap) => {
+        let bajos = 0;
+        snap.forEach(d => {
+          const p = d.data();
+          if ((p.stock ?? 0) <= (p.alertaMinima ?? 0)) bajos++;
+        });
+        const el = document.getElementById("stat-alertas");
+        if (bajos === 0) {
+          el.textContent = "Todo OK ✓";
+          el.className = "stat-ok";
+        } else {
+          el.textContent = `${bajos} producto${bajos > 1 ? "s" : ""}`;
+          el.className = "stat-alerta";
+        }
+      });
+    }
+
+    document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
   </script>
 </body>
 </html>
