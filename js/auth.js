@@ -5,11 +5,12 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  doc, getDoc, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { tienePermiso } from "./permisos.js";
 
 const provider = new GoogleAuthProvider();
-
 const PUBLIC_PAGES = ["index.html", ""];
 
 export function guardRoute() {
@@ -25,20 +26,30 @@ export function guardRoute() {
 }
 
 async function cargarUsuario(user) {
-  const snap = await getDoc(doc(db, "usuarios", user.uid));
+  const ref  = doc(db, "usuarios", user.uid);
+  const snap = await getDoc(ref);
+
   if (snap.exists()) {
+    // Usuario ya existe — cargar sus datos
     const data = snap.data();
     sessionStorage.setItem("uid",    user.uid);
-    sessionStorage.setItem("nombre", data.nombre);
-    sessionStorage.setItem("rol",    data.rol);
+    sessionStorage.setItem("nombre", data.nombre || user.displayName || user.email);
+    sessionStorage.setItem("rol",    data.rol || "sin_rol");
     sessionStorage.setItem("email",  user.email);
-    return data;
   } else {
+    // Primera vez que entra — crear documento automáticamente con sin_rol
+    const nuevoUsuario = {
+      nombre:    user.displayName || user.email,
+      email:     user.email,
+      foto:      user.photoURL || "",
+      rol:       "sin_rol",
+      creadoEn:  serverTimestamp(),
+    };
+    await setDoc(ref, nuevoUsuario);
     sessionStorage.setItem("uid",    user.uid);
-    sessionStorage.setItem("nombre", user.displayName || user.email);
+    sessionStorage.setItem("nombre", nuevoUsuario.nombre);
     sessionStorage.setItem("rol",    "sin_rol");
     sessionStorage.setItem("email",  user.email);
-    return null;
   }
 }
 
