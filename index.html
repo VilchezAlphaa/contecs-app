@@ -151,10 +151,26 @@
         await loginConGoogle();
         const rol = sessionStorage.getItem("rol");
         if (rol === "sin_rol") {
-          msgAviso.textContent = "✅ Tu cuenta fue registrada exitosamente. Aún no tienes un rol asignado — contacta al administrador de CONTECS para activar tu acceso.";
+          msgAviso.textContent = "✅ Tu cuenta fue registrada. Aún no tienes un rol asignado — cuando el administrador te active, entrarás automáticamente.";
           msgAviso.classList.add("show");
           btn.disabled = false;
           btn.childNodes[1].textContent = " Continuar con Google";
+          // Escuchar en tiempo real — cuando el admin asigne rol, redirigir automáticamente
+          const uid = sessionStorage.getItem("uid");
+          if (uid) {
+            const { escucharCambiosDeRol } = await import("./js/auth.js");
+            // Escucha manual aquí porque guardRoute no aplica en index
+            const { db } = await import("./js/firebase-config.js");
+            const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
+            onSnapshot(doc(db, "usuarios", uid), (snap) => {
+              if (!snap.exists()) return;
+              const nuevoRol = snap.data().rol || "sin_rol";
+              if (nuevoRol !== "sin_rol") {
+                sessionStorage.setItem("rol", nuevoRol);
+                window.location.href = "dashboard.html";
+              }
+            });
+          }
           return;
         }
         window.location.href = "dashboard.html";

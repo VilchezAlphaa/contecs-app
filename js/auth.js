@@ -6,12 +6,31 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import {
-  doc, getDoc, setDoc, serverTimestamp
+  doc, getDoc, setDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { tienePermiso } from "./permisos.js";
 
 const provider = new GoogleAuthProvider();
 const PUBLIC_PAGES = ["index.html", ""];
+
+// Escucha cambios en el documento del usuario en Firestore en tiempo real
+// Si el rol cambia, actualiza sessionStorage y recarga la página automáticamente
+export function escucharCambiosDeRol(uid) {
+  const ref = doc(db, "usuarios", uid);
+  return onSnapshot(ref, (snap) => {
+    if (!snap.exists()) return;
+    const data       = snap.data();
+    const rolActual  = sessionStorage.getItem("rol");
+    const rolNuevo   = data.rol || "sin_rol";
+
+    if (rolActual !== rolNuevo) {
+      // El admin cambió el rol — actualizar y recargar sin que el usuario haga nada
+      sessionStorage.setItem("rol",    rolNuevo);
+      sessionStorage.setItem("nombre", data.nombre || sessionStorage.getItem("nombre"));
+      window.location.reload();
+    }
+  });
+}
 
 export function guardRoute() {
   const page = window.location.pathname.split("/").pop() || "index.html";
@@ -21,6 +40,9 @@ export function guardRoute() {
     } else if (user && PUBLIC_PAGES.includes(page)) {
       await cargarUsuario(user);
       window.location.href = "dashboard.html";
+    } else if (user && !PUBLIC_PAGES.includes(page)) {
+      // Ya autenticado en página protegida — escuchar cambios de rol
+      escucharCambiosDeRol(user.uid);
     }
   });
 }

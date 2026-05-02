@@ -160,8 +160,23 @@
         <div class="sin-rol-card">
           <div class="icono">⏳</div>
           <h3>Acceso pendiente de activación</h3>
-          <p>Tu cuenta fue registrada correctamente.<br>Un administrador de CONTECS debe asignarte un rol para que puedas acceder al sistema.</p>
+          <p>Tu cuenta fue registrada correctamente.<br>Un administrador de CONTECS te asignará un rol — <strong>entrarás automáticamente</strong> en cuanto sea activado.</p>
+          <div style="margin-top:16px;">
+            <div class="spinner" style="margin:0 auto;"></div>
+            <p style="font-size:12px;color:#8a9e8d;margin-top:10px;">Esperando activación...</p>
+          </div>
         </div>`;
+      // Escuchar en tiempo real — cuando admin asigne rol, recargar sin que el usuario haga nada
+      const { db } = await import("./js/firebase-config.js");
+      const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
+      onSnapshot(doc(db, "usuarios", usuario.uid), (snap) => {
+        if (!snap.exists()) return;
+        const nuevoRol = snap.data().rol || "sin_rol";
+        if (nuevoRol !== "sin_rol") {
+          sessionStorage.setItem("rol", nuevoRol);
+          window.location.reload();
+        }
+      });
     } else {
       // Stats
       const mostrarStats = tienePermiso(rol, "ver_fondos") || tienePermiso(rol, "ver_inventario");
