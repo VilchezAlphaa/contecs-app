@@ -1,0 +1,57 @@
+import { auth, db } from "./firebase-config.js";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+// Páginas que NO requieren login
+const PUBLIC_PAGES = ["index.html", "/"];
+
+// Guardia de ruta — redirige al login si no hay sesión
+export function guardRoute() {
+  const page = window.location.pathname.split("/").pop() || "index.html";
+  onAuthStateChanged(auth, async (user) => {
+    if (!user && !PUBLIC_PAGES.includes(page)) {
+      window.location.href = "index.html";
+    } else if (user && (page === "index.html" || page === "")) {
+      window.location.href = "dashboard.html";
+    }
+  });
+}
+
+// Login
+export async function loginUsuario(email, password) {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  const snap = await getDoc(doc(db, "usuarios", cred.user.uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    sessionStorage.setItem("nombre", data.nombre);
+    sessionStorage.setItem("rol", data.rol);
+    sessionStorage.setItem("uid", cred.user.uid);
+  }
+  return cred.user;
+}
+
+// Logout
+export async function cerrarSesion() {
+  sessionStorage.clear();
+  await signOut(auth);
+  window.location.href = "index.html";
+}
+
+// Obtener usuario actual desde sessionStorage
+export function getUsuarioActual() {
+  return {
+    uid: sessionStorage.getItem("uid"),
+    nombre: sessionStorage.getItem("nombre"),
+    rol: sessionStorage.getItem("rol")
+  };
+}
+
+// Verificar si el usuario tiene un rol permitido
+export function tienePermiso(rolesPermitidos = []) {
+  const rol = sessionStorage.getItem("rol");
+  return rolesPermitidos.includes(rol);
+}
