@@ -8,7 +8,7 @@ import {
 export const ICONOS = {
   bebidas: [
     { id: "lata",      emoji: "🥤", label: "Lata / Refresco" },
-    { id: "botella",   emoji: "🍶", label: "Botella" },
+    { id: "botella",   emoji: "🍶", label: "Botellas" },
     { id: "agua",      emoji: "💧", label: "Agua" },
     { id: "cafe",      emoji: "☕", label: "Café" },
     { id: "jugo",      emoji: "🍹", label: "Jugo" },
