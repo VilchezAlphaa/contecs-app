@@ -4,122 +4,136 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CONTECS — Panel Principal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
     .bienvenida {
       background: linear-gradient(135deg, #045223 0%, #00722e 100%);
       color: #fff;
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 22px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 6px 20px rgba(4,82,35,0.25);
+      box-shadow: 0 8px 24px rgba(4,82,35,0.22);
       position: relative;
       overflow: hidden;
     }
-    .bienvenida::after {
-      content: '🏛️';
+    .bienvenida::before {
+      content: '';
       position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 52px;
-      opacity: 0.12;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
     }
-    .bienvenida .saludo  { font-size: 13px; opacity: 0.8; }
-    .bienvenida .nombre  { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
-    .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bienvenida::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; right: 30px;
+      width: 80px; height: 80px;
+      background: rgba(57,181,74,0.15);
+      border-radius: 50%;
+    }
+    .bienvenida .saludo  { font-size: 13px; opacity: 0.75; font-weight: 500; }
+    .bienvenida .nombre  { font-size: 22px; font-weight: 800; margin: 3px 0 10px; letter-spacing: -0.3px; }
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
     .rol-pill {
       display: inline-block;
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.28);
+      padding: 4px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      backdrop-filter: blur(4px);
     }
     .nivel-pill {
       display: inline-block;
-      background: rgba(57,181,74,0.3);
-      border: 1px solid rgba(57,181,74,0.4);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
+      background: rgba(57,181,74,0.25);
+      border: 1px solid rgba(57,181,74,0.35);
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
     }
-
     .mini-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 4px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 4px;
     }
     .stat-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border-left: 3px solid #39b54a;
+      background: #fff; border-radius: 14px;
+      padding: 16px; box-shadow: var(--sombra-sm);
+      border-left: 3px solid var(--verde-claro);
+      transition: var(--transicion);
     }
-    .stat-label { font-size: 12px; color: #8a9e8d; margin-bottom: 4px; }
-    .stat-valor { font-size: 19px; font-weight: 700; color: #00722e; }
-    .stat-alerta { font-size: 19px; font-weight: 700; color: #c0392b; }
-    .stat-ok     { font-size: 15px; font-weight: 700; color: #39b54a; }
+    .stat-card:hover { transform: translateY(-1px); box-shadow: var(--sombra-md); }
+    .stat-label { font-size: 12px; color: var(--gris-medio); margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .stat-valor  { font-size: 20px; font-weight: 800; color: var(--verde); }
+    .stat-alerta { font-size: 20px; font-weight: 800; color: var(--rojo); }
+    .stat-ok     { font-size: 16px; font-weight: 700; color: var(--verde-claro); }
 
     .grid-modulos {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: grid; grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
     .modulo-btn {
-      background: #fff;
-      border: none;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      padding: 22px 14px 18px;
-      text-align: center;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      transition: transform 0.12s, box-shadow 0.15s;
-      border-bottom: 3px solid #39b54a;
-    }
-    .modulo-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0,114,46,0.14);
-    }
-    .modulo-btn:active { transform: scale(0.97); }
-    .modulo-btn .icono { font-size: 30px; line-height: 1; }
-    .modulo-btn .label { font-size: 13px; font-weight: 600; color: #1a2e1e; line-height: 1.3; }
-    .modulo-btn.bloqueado {
-      opacity: 0.3;
-      cursor: not-allowed;
-      pointer-events: none;
-      border-bottom-color: #d0dbd2;
-    }
-    .modulo-btn.mod-admin {
-      border-bottom-color: #045223;
-    }
-
-    /* Panel sin rol */
-    .sin-rol-card {
-      background: #fff;
+      background: #fff; border: none;
       border-radius: 16px;
-      padding: 32px 24px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      border-top: 4px solid #d4850a;
+      box-shadow: var(--sombra-sm);
+      padding: 22px 14px 18px;
+      text-align: center; cursor: pointer;
+      text-decoration: none;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+      transition: var(--transicion);
+      border-bottom: 3px solid var(--verde-claro);
+      position: relative; overflow: hidden;
     }
-    .sin-rol-card .icono { font-size: 48px; margin-bottom: 12px; }
-    .sin-rol-card h3 { font-size: 17px; color: #1a2e1e; margin-bottom: 8px; }
-    .sin-rol-card p { font-size: 14px; color: #8a9e8d; line-height: 1.5; }
+    .modulo-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--verde-fondo);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .modulo-btn:hover { transform: translateY(-3px); box-shadow: var(--sombra-md); }
+    .modulo-btn:hover::before { opacity: 1; }
+    .modulo-btn:active { transform: scale(0.97); }
+    .modulo-btn .icono-wrap {
+      width: 48px; height: 48px;
+      background: var(--verde-fondo);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+      transition: var(--transicion);
+    }
+    .modulo-btn:hover .icono-wrap { background: rgba(0,114,46,0.12); }
+    .modulo-btn .icono-wrap svg { color: var(--verde); }
+    .modulo-btn .label {
+      font-size: 13px; font-weight: 600;
+      color: var(--gris-texto); line-height: 1.3;
+      position: relative; z-index: 1;
+    }
+    .modulo-btn.mod-admin { border-bottom-color: var(--verde-oscuro); }
+    .modulo-btn.mod-admin .icono-wrap { background: rgba(4,82,35,0.08); }
+    .modulo-btn.mod-admin .icono-wrap svg { color: var(--verde-oscuro); }
+    .modulo-btn.bloqueado {
+      opacity: 0.28; cursor: not-allowed; pointer-events: none;
+      border-bottom-color: var(--gris-borde);
+    }
+    .sin-rol-card {
+      background: #fff; border-radius: 18px;
+      padding: 36px 24px; text-align: center;
+      box-shadow: var(--sombra-sm);
+      border-top: 4px solid var(--amarillo);
+    }
+    .sin-rol-card h3 { font-size: 17px; font-weight: 700; color: var(--gris-texto); margin-bottom: 8px; }
+    .sin-rol-card p { font-size: 14px; color: var(--gris-medio); line-height: 1.6; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <h1>CONTECS</h1>
-    <button class="btn-logout" id="btn-logout">Salir</button>
+    <button class="btn-logout" id="btn-logout">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Salir
+    </button>
   </div>
 
   <div class="container">
@@ -138,10 +152,9 @@
   <script type="module">
     import { guardRoute, getUsuarioActual, cerrarSesion } from "./js/auth.js";
     import { tienePermiso, infoRol } from "./js/permisos.js";
+    import { icon } from "./js/icons.js";
     import { db } from "./js/firebase-config.js";
-    import {
-      doc, onSnapshot, collection, query, where
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    import { doc, onSnapshot, collection, query, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
     guardRoute();
 
@@ -158,15 +171,17 @@
     if (rol === "sin_rol") {
       contenido.innerHTML = `
         <div class="sin-rol-card">
-          <div class="icono">⏳</div>
+          <div style="width:56px;height:56px;background:var(--amarillo-fondo);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            ${icon('clock','icon-lg')}
+          </div>
           <h3>Acceso pendiente de activación</h3>
-          <p>Tu cuenta fue registrada correctamente.<br>Un administrador de CONTECS te asignará un rol — <strong>entrarás automáticamente</strong> en cuanto sea activado.</p>
-          <div style="margin-top:16px;">
-            <div class="spinner" style="margin:0 auto;"></div>
-            <p style="font-size:12px;color:#8a9e8d;margin-top:10px;">Esperando activación...</p>
+          <p>Tu cuenta fue registrada correctamente.<br>Un administrador te asignará un rol — <strong>entrarás automáticamente</strong> cuando esté listo.</p>
+          <div style="margin-top:20px;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <div class="spinner" style="width:20px;height:20px;border-width:2px;"></div>
+            <span style="font-size:12px;color:var(--gris-medio);font-weight:500;">Esperando activación...</span>
           </div>
         </div>`;
-      // Escuchar en tiempo real — cuando admin asigne rol, recargar sin que el usuario haga nada
+
       const { db } = await import("./js/firebase-config.js");
       const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
       onSnapshot(doc(db, "usuarios", usuario.uid), (snap) => {
@@ -178,54 +193,53 @@
         }
       });
     } else {
+      const MODULOS = [
+        { label: "Ventas",     icono: "shopping-cart", href: "ventas.html",     permiso: "registrar_ventas",  admin: false },
+        { label: "Inventario", icono: "package",        href: "inventario.html", permiso: "ver_inventario",    admin: false },
+        { label: "Bitácora",   icono: "clipboard-list", href: "bitacora.html",   permiso: "ver_bitacora",      admin: false },
+        { label: "Reportes",   icono: "bar-chart-2",    href: "reportes.html",   permiso: "ver_reportes",      admin: false },
+        { label: "Compras",    icono: "truck",           href: "compras.html",    permiso: "registrar_compras", admin: true  },
+        { label: "Fondos",     icono: "dollar-sign",    href: "fondos.html",     permiso: "ver_fondos",        admin: true  },
+        { label: "Catálogo",   icono: "layout-grid",    href: "catalogo.html",   permiso: "editar_catalogo",   admin: true  },
+        { label: "Exportar",   icono: "download",       href: "exportar.html",   permiso: "exportar_datos",    admin: true  },
+        { label: "Usuarios",   icono: "users",           href: "usuarios.html",   permiso: "gestionar_usuarios",admin: true  },
+      ];
+
       // Stats
-      const mostrarStats = tienePermiso(rol, "ver_fondos") || tienePermiso(rol, "ver_inventario");
+      const mostrarStats = tienePermiso(rol,"ver_fondos") || tienePermiso(rol,"ver_inventario");
       if (mostrarStats) {
         const statsEl = document.createElement("div");
         statsEl.className = "mini-stats";
         statsEl.style.marginBottom = "16px";
         statsEl.innerHTML = `
           <div class="stat-card">
-            <div class="stat-label">💰 Fondo actual</div>
-            <div class="stat-valor" id="stat-fondo">${tienePermiso(rol,"ver_fondos") ? "Cargando..." : "—"}</div>
+            <div class="stat-label">${icon('dollar-sign','icon-sm')} Fondo actual</div>
+            <div class="stat-valor" id="stat-fondo">${tienePermiso(rol,"ver_fondos") ? "..." : "—"}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">⚠️ Stock bajo</div>
-            <div id="stat-alertas" class="stat-valor">${tienePermiso(rol,"ver_inventario") ? "Cargando..." : "—"}</div>
+            <div class="stat-label">${icon('alert-triangle','icon-sm')} Stock bajo</div>
+            <div id="stat-alertas" class="stat-valor">...</div>
           </div>`;
         contenido.appendChild(statsEl);
 
-        if (tienePermiso(rol, "ver_fondos")) {
-          onSnapshot(doc(db, "fondos", "principal"), (snap) => {
+        if (tienePermiso(rol,"ver_fondos")) {
+          onSnapshot(doc(db,"fondos","principal"), (snap) => {
             document.getElementById("stat-fondo").textContent = snap.exists()
-              ? "₡" + (snap.data().balance ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })
-              : "₡0.00";
+              ? "$" + (snap.data().balance ?? 0).toLocaleString("es-PA", {minimumFractionDigits:2})
+              : "$0.00";
           });
         }
 
-        if (tienePermiso(rol, "ver_inventario")) {
-          onSnapshot(query(collection(db, "productos"), where("activo","==",true)), (snap) => {
+        if (tienePermiso(rol,"ver_inventario")) {
+          onSnapshot(query(collection(db,"productos"), where("activo","==",true)), (snap) => {
             let bajos = 0;
             snap.forEach(d => { const p = d.data(); if ((p.stock??0) <= (p.alertaMinima??0)) bajos++; });
             const el = document.getElementById("stat-alertas");
-            el.textContent = bajos === 0 ? "Todo OK ✓" : `${bajos} producto${bajos>1?"s":""}`;
+            el.textContent = bajos === 0 ? "Todo OK" : `${bajos} producto${bajos>1?"s":""}`;
             el.className   = bajos === 0 ? "stat-ok" : "stat-alerta";
           });
         }
       }
-
-      // Módulos
-      const MODULOS = [
-        { label: "Registrar Ventas",  icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas",  admin: false },
-        { label: "Inventario",        icono: "📦", href: "inventario.html", permiso: "ver_inventario",    admin: false },
-        { label: "Bitácora",          icono: "📋", href: "bitacora.html",   permiso: "ver_bitacora",      admin: false },
-        { label: "Reportes",          icono: "📈", href: "reportes.html",   permiso: "ver_reportes",      admin: false },
-        { label: "Compras",           icono: "🛒", href: "compras.html",    permiso: "registrar_compras", admin: true  },
-        { label: "Fondos",            icono: "💳", href: "fondos.html",     permiso: "ver_fondos",        admin: true  },
-        { label: "Catálogo",          icono: "🗂️", href: "catalogo.html",   permiso: "editar_catalogo",   admin: true  },
-        { label: "Exportar",          icono: "📤", href: "exportar.html",   permiso: "exportar_datos",    admin: true  },
-        { label: "Usuarios",          icono: "👥", href: "usuarios.html",   permiso: "gestionar_usuarios",admin: true  },
-      ];
 
       const tituloEl = document.createElement("div");
       tituloEl.className = "seccion-titulo";
@@ -235,12 +249,15 @@
       const grid = document.createElement("div");
       grid.className = "grid-modulos";
 
-      MODULOS.forEach(mod => {
+      MODULOS.forEach((mod, i) => {
         const tiene = tienePermiso(rol, mod.permiso);
         const a = document.createElement("a");
         a.href = tiene ? mod.href : "#";
-        a.className = "modulo-btn" + (tiene ? (mod.admin ? " mod-admin" : "") : " bloqueado");
-        a.innerHTML = `<span class="icono">${mod.icono}</span><span class="label">${mod.label}</span>`;
+        a.className = `modulo-btn${tiene ? (mod.admin ? " mod-admin" : "") : " bloqueado"}`;
+        a.style.animationDelay = `${i * 0.04}s`;
+        a.innerHTML = `
+          <div class="icono-wrap">${icon(mod.icono,'icon-lg')}</div>
+          <span class="label">${mod.label}</span>`;
         grid.appendChild(a);
       });
 

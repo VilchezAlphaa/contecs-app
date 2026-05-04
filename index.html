@@ -4,115 +4,98 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CONTECS — Iniciar Sesión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(160deg, #045223 0%, #00722e 60%, #39b54a 100%);
+      min-height: 100vh;
+      background: linear-gradient(160deg, #045223 0%, #00722e 55%, #39b54a 100%);
+      animation: none;
     }
     .login-box {
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 12px 40px rgba(4,82,35,0.25);
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 24px 64px rgba(4,82,35,0.22), 0 4px 16px rgba(0,0,0,0.08);
       padding: 44px 32px 40px;
       width: 100%;
       max-width: 390px;
       margin: 16px;
       text-align: center;
+      animation: fadeSlideUp 0.45s cubic-bezier(0.4,0,0.2,1) both;
     }
-    .logo-wrap {
-      margin-bottom: 20px;
+    @keyframes fadeSlideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
     }
     .logo-circle {
       width: 76px; height: 76px;
       background: linear-gradient(135deg, #045223 0%, #00722e 100%);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 14px;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(0,114,46,0.32);
       font-size: 32px;
-      box-shadow: 0 6px 20px rgba(0,114,46,0.3);
     }
-    .logo-wrap h2 {
+    .login-box h2 {
       font-size: 26px;
       font-weight: 800;
       color: #00722e;
       letter-spacing: 2px;
       margin-bottom: 4px;
     }
-    .logo-wrap p {
+    .subtitulo {
       font-size: 13px;
       color: #8a9e8d;
-      margin-bottom: 0;
+      margin-bottom: 32px;
+      font-weight: 500;
     }
     .divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 28px 0 20px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
     }
     .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #d0dbd2;
+      content:''; flex:1; height:1px; background:#d0dbd2;
     }
-    .divider span { font-size: 12px; color: #8a9e8d; white-space: nowrap; }
+    .divider span { font-size:12px; color:#8a9e8d; font-weight:500; }
     .btn-google {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      padding: 14px 20px;
-      border: 1.5px solid #d0dbd2;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 15px;
-      font-weight: 600;
-      color: #1a2e1e;
-      cursor: pointer;
-      transition: all 0.15s;
-      min-height: 52px;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 15px 20px;
+      border: 1.5px solid #d0dbd2; border-radius: 12px;
+      background: #fff; font-size: 15px; font-weight: 600;
+      color: #1a2e1e; cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+      min-height: 52px; font-family: 'Inter', sans-serif;
     }
     .btn-google:hover {
       border-color: #00722e;
       background: #f4f7f5;
-      box-shadow: 0 2px 12px rgba(0,114,46,0.12);
+      box-shadow: 0 4px 16px rgba(0,114,46,0.14);
+      transform: translateY(-1px);
     }
     .btn-google:active { transform: scale(0.98); }
-    .btn-google:disabled { opacity: 0.55; cursor: not-allowed; }
-    .alerta {
-      padding: 11px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-      text-align: left;
-      line-height: 1.4;
-    }
-    .alerta.show { display: block; }
-    .alerta-error  { background: #fdedec; color: #c0392b; border-left: 4px solid #c0392b; }
-    .alerta-aviso  { background: #fef9e7; color: #d4850a; border-left: 4px solid #d4850a; }
-    .nota {
-      font-size: 12px;
-      color: #aaa;
-      margin-top: 24px;
-      line-height: 1.6;
-    }
+    .btn-google:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .nota { font-size: 12px; color: #aaa; margin-top: 24px; line-height: 1.6; font-weight: 500; }
     .nota strong { color: #00722e; }
+    .alerta {
+      padding: 11px 14px; border-radius: 10px; font-size: 13px;
+      margin-bottom: 16px; display: none; text-align: left;
+      line-height: 1.4; font-weight: 500; align-items: center; gap: 8px;
+    }
+    .alerta.show { display: flex; animation: fadeSlideUp 0.2s ease both; }
+    .alerta-error  { background:#fdedec; color:#c0392b; border-left:4px solid #c0392b; }
+    .alerta-aviso  { background:#fef9e7; color:#d4850a; border-left:4px solid #d4850a; }
   </style>
 </head>
 <body>
   <div class="login-box">
-    <div class="logo-wrap">
-      <div class="logo-circle">🏛️</div>
-      <h2>CONTECS</h2>
-      <p>Sistema de Gestión Organizacional</p>
-    </div>
+    <div class="logo-circle">🏛️</div>
+    <h2>CONTECS</h2>
+    <p class="subtitulo">Sistema de Gestión Organizacional</p>
 
     <div class="alerta alerta-error" id="msg-error"></div>
     <div class="alerta alerta-aviso" id="msg-aviso"></div>
@@ -129,7 +112,7 @@
       Continuar con Google
     </button>
 
-    <p class="nota">Solo miembros de <strong>CONTECS</strong> pueden ingresar.<br>Si eres nuevo, tu acceso será activado por un administrador.</p>
+    <p class="nota">Solo miembros de <strong>CONTECS</strong> pueden ingresar.<br>Tu acceso será activado por un administrador.</p>
   </div>
 
   <script type="module">
@@ -143,7 +126,7 @@
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
-      btn.childNodes[1].textContent = " Conectando...";
+      btn.lastElementChild.textContent = " Conectando...";
       msgError.classList.remove("show");
       msgAviso.classList.remove("show");
 
@@ -151,15 +134,13 @@
         await loginConGoogle();
         const rol = sessionStorage.getItem("rol");
         if (rol === "sin_rol") {
-          msgAviso.textContent = "✅ Tu cuenta fue registrada. Aún no tienes un rol asignado — cuando el administrador te active, entrarás automáticamente.";
+          msgAviso.textContent = "Tu cuenta fue registrada. Un administrador te asignará un rol — entrarás automáticamente cuando esté listo.";
           msgAviso.classList.add("show");
           btn.disabled = false;
-          btn.childNodes[1].textContent = " Continuar con Google";
-          // Escuchar en tiempo real — cuando el admin asigne rol, redirigir automáticamente
+          btn.lastElementChild.textContent = " Continuar con Google";
+
           const uid = sessionStorage.getItem("uid");
           if (uid) {
-            const { escucharCambiosDeRol } = await import("./js/auth.js");
-            // Escucha manual aquí porque guardRoute no aplica en index
             const { db } = await import("./js/firebase-config.js");
             const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
             onSnapshot(doc(db, "usuarios", uid), (snap) => {
@@ -176,12 +157,12 @@
         window.location.href = "dashboard.html";
       } catch (e) {
         btn.disabled = false;
-        btn.childNodes[1].textContent = " Continuar con Google";
+        btn.lastElementChild.textContent = " Continuar con Google";
         if (e.code === "auth/popup-closed-by-user") return;
         if (e.code === "auth/popup-blocked") {
-          msgError.textContent = "⚠️ El navegador bloqueó la ventana emergente. Permite popups para este sitio e intenta de nuevo.";
+          msgError.textContent = "El navegador bloqueó la ventana emergente. Permite popups e intenta de nuevo.";
         } else {
-          msgError.textContent = "❌ Error al iniciar sesión. Intenta de nuevo.";
+          msgError.textContent = "Error al iniciar sesión. Intenta de nuevo.";
         }
         msgError.classList.add("show");
       }
