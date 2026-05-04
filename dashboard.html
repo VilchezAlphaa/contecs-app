@@ -198,8 +198,8 @@
         if (tienePermiso(rol, "ver_fondos")) {
           onSnapshot(doc(db, "fondos", "principal"), (snap) => {
             document.getElementById("stat-fondo").textContent = snap.exists()
-              ? "₡" + (snap.data().balance ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })
-              : "₡0.00";
+              ? "$" + (snap.data().balance ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })
+              : "$0.00";
           });
         }
 

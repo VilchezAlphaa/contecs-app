@@ -275,7 +275,7 @@
         <input type="text" id="prod-nombre-input" placeholder="Ej: Coca-Cola 600ml"/>
       </div>
       <div class="form-group">
-        <label>Precio de venta (₡)</label>
+        <label>Precio de venta ($)</label>
         <input type="number" id="prod-precio-input" placeholder="0.00" min="0" step="0.01"/>
       </div>
       <div class="form-group">
@@ -580,7 +580,7 @@
         <div class="prod-emoji">${getEmoji(prod.iconoId)}</div>
         <div class="prod-info">
           <div class="prod-nombre">${prod.nombre}</div>
-          <div class="prod-precio">₡${(prod.precioVenta ?? 0).toLocaleString("es-CR", {minimumFractionDigits:2})} · Alerta: ${prod.alertaMinima ?? 0} uds</div>
+          <div class="prod-precio">$${(prod.precioVenta ?? 0).toLocaleString("es-CR", {minimumFractionDigits:2})} · Alerta: ${prod.alertaMinima ?? 0} uds</div>
         </div>
         <span class="stock-badge ${badgeClass}">${badgeText}</span>
         <div class="cat-acciones">
