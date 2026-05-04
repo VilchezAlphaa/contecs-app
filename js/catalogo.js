@@ -4,59 +4,61 @@ import {
   onSnapshot, query, orderBy, where, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// ─── ICONOS PARA CATEGORÍAS (genéricos) ──────────────────────────────────────
-export const ICONOS_CATEGORIA = [
-  { id: "comida",    emoji: "🍽️", label: "Comida" },
-  { id: "bebidas",   emoji: "🥤", label: "Bebidas" },
-  { id: "dulces",    emoji: "🍬", label: "Dulces" },
-  { id: "snacks",    emoji: "🍿", label: "Snacks" },
-  { id: "postres",   emoji: "🍰", label: "Postres" },
-  { id: "otros",     emoji: "📦", label: "Otros" },
-];
+// ─── ICONOS PREDEFINIDOS POR CATEGORÍA ───────────────────────────────────────
+export const ICONOS = {
+  bebidas: [
+    { id: "lata",      emoji: "🥤", label: "Lata / Refresco" },
+    { id: "botella",   emoji: "🍶", label: "Botella" },
+    { id: "agua",      emoji: "💧", label: "Agua" },
+    { id: "cafe",      emoji: "☕", label: "Café" },
+    { id: "jugo",      emoji: "🍹", label: "Jugo" },
+    { id: "cerveza",   emoji: "🍺", label: "Cerveza" },
+    { id: "vino",      emoji: "🍷", label: "Vino" },
+    { id: "leche",     emoji: "🥛", label: "Leche" },
+    { id: "te",        emoji: "🍵", label: "Té" },
+    { id: "coctel",    emoji: "🍸", label: "Cóctel" },
+  ],
+  comida: [
+    { id: "hamburguesa", emoji: "🍔", label: "Hamburguesa" },
+    { id: "pizza",       emoji: "🍕", label: "Pizza" },
+    { id: "sandwich",    emoji: "🥪", label: "Sandwich" },
+    { id: "hotdog",      emoji: "🌭", label: "Hot Dog" },
+    { id: "taco",        emoji: "🌮", label: "Taco" },
+    { id: "arroz",       emoji: "🍚", label: "Arroz / Plato" },
+    { id: "ensalada",    emoji: "🥗", label: "Ensalada" },
+    { id: "sopa",        emoji: "🍲", label: "Sopa" },
+    { id: "pollo",       emoji: "🍗", label: "Pollo" },
+    { id: "papas",       emoji: "🍟", label: "Papas fritas" },
+  ],
+  dulces: [
+    { id: "dulce",     emoji: "🍬", label: "Dulce / Caramelo" },
+    { id: "chocolate", emoji: "🍫", label: "Chocolate" },
+    { id: "helado",    emoji: "🍦", label: "Helado" },
+    { id: "pastel",    emoji: "🎂", label: "Pastel / Torta" },
+    { id: "galleta",   emoji: "🍪", label: "Galleta" },
+    { id: "donut",     emoji: "🍩", label: "Dona" },
+    { id: "paleta",    emoji: "🍭", label: "Paleta" },
+    { id: "chicle",    emoji: "🫧", label: "Chicle" },
+  ],
+  snacks: [
+    { id: "papitas",   emoji: "🥔", label: "Papitas / Snack" },
+    { id: "palomitas", emoji: "🍿", label: "Palomitas" },
+    { id: "nachos",    emoji: "🧀", label: "Nachos" },
+    { id: "nueces",    emoji: "🥜", label: "Nueces / Maní" },
+    { id: "pretzel",   emoji: "🥨", label: "Pretzel" },
+  ],
+  otros: [
+    { id: "caja",      emoji: "📦", label: "Caja / Paquete" },
+    { id: "bolsa",     emoji: "🛍️", label: "Bolsa" },
+    { id: "ticket",    emoji: "🎟️", label: "Ticket / Entrada" },
+    { id: "regalo",    emoji: "🎁", label: "Regalo / Souvenir" },
+    { id: "producto",  emoji: "🏷️", label: "Producto general" },
+    { id: "utensilio", emoji: "🍴", label: "Utensilio" },
+  ],
+};
 
-// ─── ICONOS PARA PRODUCTOS (específicos) ─────────────────────────────────────
-export const ICONOS_PRODUCTO = [
-  // Comidas
-  { id: "hamburguesa", emoji: "🍔", label: "Hamburguesa" },
-  { id: "pizza",       emoji: "🍕", label: "Pizza" },
-  { id: "hotdog",      emoji: "🌭", label: "Hot Dog" },
-  { id: "sandwich",    emoji: "🥪", label: "Sandwich" },
-  { id: "papas",       emoji: "🍟", label: "Papas fritas" },
-  { id: "pollo",       emoji: "🍗", label: "Pollo" },
-  { id: "arroz",       emoji: "🍚", label: "Arroz / Plato" },
-  { id: "sopa",        emoji: "🍲", label: "Sopa" },
-  { id: "ensalada",    emoji: "🥗", label: "Ensalada" },
-  { id: "siumai",      emoji: "🥟", label: "Siu Mai / Dim Sum" },
-  { id: "nachos",      emoji: "🫔", label: "Nachos" },
-  { id: "wrap",        emoji: "🌯", label: "Wrap / Burrito" },
-  { id: "pudín",       emoji: "🍮", label: "Pudín / Flan" },
-  // Bebidas
-  { id: "soda",        emoji: "🥤", label: "Soda / Refresco" },
-  { id: "agua",        emoji: "💧", label: "Agua" },
-  { id: "cafe",        emoji: "☕", label: "Café" },
-  { id: "jugo",        emoji: "🍹", label: "Jugo / Fresco" },
-  { id: "te",          emoji: "🍵", label: "Té" },
-  { id: "leche",       emoji: "🥛", label: "Leche" },
-  // Dulces y postres
-  { id: "helado",      emoji: "🍦", label: "Helado" },
-  { id: "pastel",      emoji: "🎂", label: "Pastel / Torta" },
-  { id: "galleta",     emoji: "🍪", label: "Galleta" },
-  { id: "donut",       emoji: "🍩", label: "Dona" },
-  { id: "paleta",      emoji: "🍭", label: "Paleta" },
-  { id: "chocolate",   emoji: "🍫", label: "Chocolate" },
-  { id: "dulce",       emoji: "🍬", label: "Dulce / Caramelo" },
-  // Snacks
-  { id: "papitas",     emoji: "🥔", label: "Papitas" },
-  { id: "palomitas",   emoji: "🍿", label: "Palomitas" },
-  { id: "nueces",      emoji: "🥜", label: "Nueces / Maní" },
-  // Otros
-  { id: "producto",    emoji: "🏷️", label: "Producto general" },
-  { id: "ticket",      emoji: "🎟️", label: "Ticket / Entrada" },
-  { id: "regalo",      emoji: "🎁", label: "Souvenir / Regalo" },
-];
-
-// Todos los iconos combinados para búsqueda
-export const TODOS_ICONOS = [...ICONOS_CATEGORIA, ...ICONOS_PRODUCTO];
+// Todos los iconos en un array plano para búsqueda rápida
+export const TODOS_ICONOS = Object.values(ICONOS).flat();
 
 export function getEmoji(iconoId) {
   const found = TODOS_ICONOS.find(i => i.id === iconoId);
@@ -84,7 +86,8 @@ export async function editarCategoria(id, nombre, iconoId) {
 }
 
 export async function eliminarCategoria(id) {
-  const q    = query(collection(db, "productos"),
+  // Verificar que no tenga productos activos
+  const q = query(collection(db, "productos"),
     where("categoriaId", "==", id),
     where("activo", "==", true));
   const snap = await getDocs(q);
@@ -105,13 +108,15 @@ export function escucharProductosPorCategoria(categoriaId, callback) {
 export async function crearProducto(datos) {
   return addDoc(collection(db, "productos"), {
     ...datos,
-    stock:    0,
-    activo:   true,
+    stock: 0,
+    activo: true,
     creadoEn: serverTimestamp(),
   });
 }
 
 export async function editarProducto(id, datos) {
+  // Solo se pueden editar: nombre, icono, precioVenta, alertaMinima
+  // NUNCA el stock desde aquí
   const { nombre, iconoId, precioVenta, alertaMinima } = datos;
   return updateDoc(doc(db, "productos", id), {
     nombre, iconoId, precioVenta, alertaMinima
@@ -127,8 +132,9 @@ export async function reactivarProducto(id) {
 }
 
 // ─── ESTADO DEL STOCK ────────────────────────────────────────────────────────
+// Devuelve: "ok" | "alerta" | "agotado"
 export function estadoStock(stock, alertaMinima) {
-  if (stock <= 0)            return "agotado";
-  if (stock <= alertaMinima) return "alerta";
+  if (stock <= 0)             return "agotado";
+  if (stock <= alertaMinima)  return "alerta";
   return "ok";
 }
