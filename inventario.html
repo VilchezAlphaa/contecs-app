@@ -6,7 +6,7 @@
   <title>CONTECS — Inventario</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
-    /* Resumen de alertas arriba */
+    /* ── RESUMEN DE ALERTAS ── */
     .alertas-bar {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -19,26 +19,51 @@
       padding: 14px 12px;
       text-align: center;
       box-shadow: var(--sombra-sm);
+      opacity: 0;
+      animation: cardCascade 0.42s var(--ease-spring) both;
     }
-    .alerta-stat .num  { font-size: 26px; font-weight: 800; line-height: 1; }
-    .alerta-stat .lbl  { font-size: 11px; color: var(--gris-medio); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .alerta-stat:nth-child(1) { animation-delay: 0.08s; }
+    .alerta-stat:nth-child(2) { animation-delay: 0.15s; }
+    .alerta-stat:nth-child(3) { animation-delay: 0.22s; }
+
+    .alerta-stat .num { font-size: 26px; font-weight: 800; line-height: 1; }
+    .alerta-stat .lbl { font-size: 11px; color: var(--gris-medio); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
     .num-ok      { color: var(--verde-claro); }
     .num-alerta  { color: var(--amarillo); }
     .num-agotado { color: var(--rojo); }
 
-    /* Buscador */
-    .buscador-wrap { position: relative; margin-bottom: 16px; }
-    .buscador-wrap input { padding-left: 36px; }
+    /* ── BUSCADOR ── */
+    .buscador-wrap {
+      position: relative;
+      margin-bottom: 16px;
+      animation: pageSlideUp 0.4s var(--ease-out) both;
+      animation-delay: 0.28s;
+    }
+    .buscador-wrap input {
+      width: 100%;
+      padding: 12px 14px 12px 36px;
+      border: 1.5px solid var(--gris-borde);
+      border-radius: var(--radio-sm);
+      font-size: 15px;
+      font-family: var(--fuente);
+      background: #fff;
+      color: var(--gris-texto);
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    .buscador-wrap input:focus {
+      outline: none;
+      border-color: var(--verde);
+      box-shadow: 0 0 0 4px rgba(0,114,46,0.12);
+      transform: translateY(-1px);
+    }
     .buscador-wrap .icono-buscar {
       position: absolute; left: 12px; top: 50%;
       transform: translateY(-50%);
       font-size: 16px; pointer-events: none;
     }
 
-    /* Sección de categoría */
-    .seccion-cat {
-      margin-bottom: 20px;
-    }
+    /* ── SECCIÓN DE CATEGORÍA ── */
+    .seccion-cat { margin-bottom: 20px; }
     .seccion-cat-titulo {
       display: flex;
       align-items: center;
@@ -49,9 +74,10 @@
       margin-bottom: 10px;
       padding-bottom: 6px;
       border-bottom: 2px solid var(--verde-fondo);
+      animation: slideInLeft 0.35s var(--ease-out) both;
     }
 
-    /* Cards de producto en inventario */
+    /* ── CARDS DE INVENTARIO ── */
     .inv-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -68,21 +94,25 @@
       gap: 6px;
       text-align: center;
       border-top: 3px solid var(--verde-claro);
-      transition: transform 0.12s;
+      /* Cascada asignada por JS */
+      opacity: 0;
+      animation: cardCascade 0.38s var(--ease-spring) both;
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
     }
-    .inv-card:active { transform: scale(0.97); }
+    .inv-card:hover  { transform: translateY(-3px); box-shadow: var(--sombra-md); }
+    .inv-card:active { transform: scale(0.95) !important; transition-duration: 0.08s; }
+
     .inv-card.alerta  { border-top-color: var(--amarillo); }
     .inv-card.agotado { border-top-color: var(--rojo); background: var(--rojo-fondo); }
+
     .inv-emoji  { font-size: 30px; line-height: 1; }
     .inv-nombre { font-size: 12px; font-weight: 600; color: var(--gris-texto); line-height: 1.3; }
     .inv-stock  { font-size: 22px; font-weight: 800; }
     .inv-stock.ok      { color: var(--verde); }
     .inv-stock.alerta  { color: var(--amarillo); }
     .inv-stock.agotado { color: var(--rojo); }
-    .inv-alerta-lbl {
-      font-size: 10px;
-      color: var(--gris-medio);
-    }
+
+    .inv-alerta-lbl { font-size: 10px; color: var(--gris-medio); }
     .inv-badge-agotado {
       font-size: 10px;
       font-weight: 700;
@@ -93,13 +123,15 @@
       border: 1px solid var(--rojo);
     }
 
-    /* Sección agotados destacada */
+    /* ── BANNER AGOTADOS ── */
     .agotados-banner {
       background: var(--rojo-fondo);
       border: 1.5px solid var(--rojo);
       border-radius: 12px;
       padding: 14px 16px;
       margin-bottom: 20px;
+      animation: fadeScaleIn 0.4s var(--ease-spring) both;
+      animation-delay: 0.32s;
     }
     .agotados-banner-titulo {
       font-size: 13px;
@@ -117,11 +149,16 @@
       padding: 6px 0;
       border-top: 1px solid rgba(192,57,43,0.15);
       font-size: 13px;
+      transition: background 0.15s;
     }
     .agotado-item:first-of-type { border-top: none; }
 
+    /* ── EMPTY STATE ── */
     .empty-state {
-      text-align: center; padding: 48px 20px; color: var(--gris-medio);
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--gris-medio);
+      animation: fadeScaleIn 0.4s var(--ease-spring) both;
     }
     .empty-state .emoji { font-size: 44px; margin-bottom: 10px; }
 
@@ -160,7 +197,7 @@
     <!-- Buscador -->
     <div class="buscador-wrap">
       <span class="icono-buscar">🔍</span>
-      <input type="text" id="buscador" placeholder="Buscar producto..." class="form-group" style="width:100%;padding:12px 14px 12px 36px;border:1.5px solid var(--gris-borde);border-radius:var(--radio-sm);font-size:15px;"/>
+      <input type="text" id="buscador" placeholder="Buscar producto..."/>
     </div>
 
     <!-- Spinner inicial -->
@@ -174,38 +211,35 @@
 
   <script type="module">
     import { guardRoute, requirePermiso } from "./js/auth.js";
-    import { escucharCategorias, escucharProductosPorCategoria, getEmoji, estadoStock } from "./js/catalogo.js";
+    import { escucharCategorias, getEmoji, estadoStock } from "./js/catalogo.js";
     import { db } from "./js/firebase-config.js";
     import {
-      collection, query, where, onSnapshot, orderBy
+      collection, query, where, onSnapshot
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
     guardRoute();
     requirePermiso("ver_inventario");
 
-    let categorias       = [];
-    let todosProductos   = [];
-    let terminoBusqueda  = "";
-    let unsubsProductos  = [];
+    let categorias      = [];
+    let todosProductos  = [];
+    let terminoBusqueda = "";
 
     const contenido = document.getElementById("inv-contenido");
     const spinner   = document.getElementById("spinner-inv");
 
     // Escuchar TODOS los productos activos en tiempo real
-    const qTodos = query(
-      collection(db, "productos"),
-      where("activo", "==", true)
+    onSnapshot(
+      query(collection(db, "productos"), where("activo", "==", true)),
+      (snap) => {
+        todosProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        actualizarStats();
+        renderInventario();
+      }
     );
-
-    onSnapshot(qTodos, (snap) => {
-      todosProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      actualizarStats();
-      renderInventario();
-    });
 
     escucharCategorias((cats) => {
       categorias = cats;
-      spinner.style.display  = "none";
+      spinner.style.display   = "none";
       contenido.style.display = "";
       renderInventario();
     });
@@ -214,7 +248,7 @@
       let ok = 0, alerta = 0, agotado = 0;
       todosProductos.forEach(p => {
         const e = estadoStock(p.stock ?? 0, p.alertaMinima ?? 0);
-        if (e === "ok")      ok++;
+        if (e === "ok")           ok++;
         else if (e === "alerta")  alerta++;
         else if (e === "agotado") agotado++;
       });
@@ -234,7 +268,7 @@
 
       contenido.innerHTML = "";
 
-      // Banner de agotados arriba
+      // Banner de agotados arriba (solo si no hay búsqueda activa)
       if (agotados.length > 0 && !busq) {
         const banner = document.createElement("div");
         banner.className = "agotados-banner";
@@ -249,8 +283,9 @@
         contenido.appendChild(banner);
       }
 
-      // Productos por categoría
+      // Productos por categoría con delay escalonado
       let totalVisible = 0;
+      let cardGlobal   = 0;
 
       categorias.forEach(cat => {
         const prods = todosProductos.filter(p =>
@@ -262,27 +297,33 @@
 
         const seccion = document.createElement("div");
         seccion.className = "seccion-cat";
-        seccion.innerHTML = `
-          <div class="seccion-cat-titulo">
-            <span style="font-size:20px;">${getEmoji(cat.iconoId)}</span>
-            ${cat.nombre}
-            <span style="font-size:12px;font-weight:400;color:var(--gris-medio);margin-left:4px;">(${prods.length})</span>
-          </div>
-          <div class="inv-grid" id="grid-${cat.id}"></div>`;
 
-        const grid = seccion.querySelector(`#grid-${cat.id}`);
+        const titulo = document.createElement("div");
+        titulo.className = "seccion-cat-titulo";
+        titulo.innerHTML = `
+          <span style="font-size:20px;">${getEmoji(cat.iconoId)}</span>
+          ${cat.nombre}
+          <span style="font-size:12px;font-weight:400;color:var(--gris-medio);margin-left:4px;">(${prods.length})</span>`;
+        seccion.appendChild(titulo);
 
-        // Ordenar: agotados primero, luego en alerta, luego ok
+        const grid = document.createElement("div");
+        grid.className = "inv-grid";
+
+        // Ordenar: agotados → alerta → ok
         const ordenados = [...prods].sort((a, b) => {
           const orden = { agotado: 0, alerta: 1, ok: 2 };
-          return orden[estadoStock(a.stock??0, a.alertaMinima??0)] -
-                 orden[estadoStock(b.stock??0, b.alertaMinima??0)];
+          return orden[estadoStock(a.stock ?? 0, a.alertaMinima ?? 0)] -
+                 orden[estadoStock(b.stock ?? 0, b.alertaMinima ?? 0)];
         });
 
         ordenados.forEach(prod => {
           const estado = estadoStock(prod.stock ?? 0, prod.alertaMinima ?? 0);
           const card   = document.createElement("div");
-          card.className = `inv-card ${estado !== "ok" ? estado : ""}`;
+          card.className = `inv-card${estado !== "ok" ? ` ${estado}` : ""}`;
+          // Delay escalonado global para cascada de toda la página
+          card.style.animationDelay = `${0.35 + cardGlobal * 0.045}s`;
+          cardGlobal++;
+
           card.innerHTML = `
             <div class="inv-emoji">${getEmoji(prod.iconoId)}</div>
             <div class="inv-nombre">${prod.nombre}</div>
@@ -296,13 +337,15 @@
                   ? `⚠️ Mínimo: ${prod.alertaMinima}`
                   : `Mínimo: ${prod.alertaMinima}`}
             </div>`;
+
           grid.appendChild(card);
         });
 
+        seccion.appendChild(grid);
         contenido.appendChild(seccion);
       });
 
-      // Si no hay nada
+      // Si no hay resultados
       if (totalVisible === 0) {
         contenido.innerHTML += `
           <div class="empty-state">
@@ -314,7 +357,6 @@
       }
     }
 
-    // Buscador
     document.getElementById("buscador").addEventListener("input", (e) => {
       terminoBusqueda = e.target.value;
       renderInventario();

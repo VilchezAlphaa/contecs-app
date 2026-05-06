@@ -6,15 +6,18 @@
   <title>CONTECS — Panel Principal</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
+    /* ── BIENVENIDA ── */
     .bienvenida {
       background: linear-gradient(135deg, #045223 0%, #00722e 100%);
       color: #fff;
       border-radius: 16px;
       padding: 22px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 6px 20px rgba(4,82,35,0.25);
+      box-shadow: 0 8px 28px rgba(4,82,35,0.30);
       position: relative;
       overflow: hidden;
+      animation: fadeScaleIn 0.5s var(--ease-spring) both;
+      animation-delay: 0.05s;
     }
     .bienvenida::after {
       content: '🏛️';
@@ -25,8 +28,8 @@
       font-size: 52px;
       opacity: 0.12;
     }
-    .bienvenida .saludo  { font-size: 13px; opacity: 0.8; }
-    .bienvenida .nombre  { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
+    .bienvenida .saludo { font-size: 13px; opacity: 0.8; }
+    .bienvenida .nombre { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
     .pills { display: flex; gap: 8px; flex-wrap: wrap; }
     .rol-pill {
       display: inline-block;
@@ -46,6 +49,7 @@
       font-size: 12px;
     }
 
+    /* ── MINI STATS ── */
     .mini-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -58,12 +62,17 @@
       padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       border-left: 3px solid #39b54a;
+      animation: cardCascade 0.45s var(--ease-spring) both;
     }
-    .stat-label { font-size: 12px; color: #8a9e8d; margin-bottom: 4px; }
-    .stat-valor { font-size: 19px; font-weight: 700; color: #00722e; }
+    .stat-card:nth-child(1) { animation-delay: 0.12s; }
+    .stat-card:nth-child(2) { animation-delay: 0.20s; }
+
+    .stat-label  { font-size: 12px; color: #8a9e8d; margin-bottom: 4px; }
+    .stat-valor  { font-size: 19px; font-weight: 700; color: #00722e; }
     .stat-alerta { font-size: 19px; font-weight: 700; color: #c0392b; }
     .stat-ok     { font-size: 15px; font-weight: 700; color: #39b54a; }
 
+    /* ── GRID DE MÓDULOS ── */
     .grid-modulos {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -82,27 +91,31 @@
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      transition: transform 0.12s, box-shadow 0.15s;
       border-bottom: 3px solid #39b54a;
+      /* Animación en cascada — se asigna delay por JS */
+      opacity: 0;
+      animation: cardCascade 0.42s var(--ease-spring) both;
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
     }
     .modulo-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0,114,46,0.14);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 28px rgba(0,114,46,0.18);
     }
-    .modulo-btn:active { transform: scale(0.97); }
+    .modulo-btn:active {
+      transform: scale(0.94) !important;
+      transition-duration: 0.08s;
+    }
     .modulo-btn .icono { font-size: 30px; line-height: 1; }
     .modulo-btn .label { font-size: 13px; font-weight: 600; color: #1a2e1e; line-height: 1.3; }
     .modulo-btn.bloqueado {
-      opacity: 0.3;
+      opacity: 0.3 !important;
       cursor: not-allowed;
       pointer-events: none;
       border-bottom-color: #d0dbd2;
     }
-    .modulo-btn.mod-admin {
-      border-bottom-color: #045223;
-    }
+    .modulo-btn.mod-admin { border-bottom-color: #045223; }
 
-    /* Panel sin rol */
+    /* ── SIN ROL ── */
     .sin-rol-card {
       background: #fff;
       border-radius: 16px;
@@ -110,10 +123,12 @@
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       border-top: 4px solid #d4850a;
+      animation: fadeScaleIn 0.5s var(--ease-spring) both;
+      animation-delay: 0.1s;
     }
     .sin-rol-card .icono { font-size: 48px; margin-bottom: 12px; }
     .sin-rol-card h3 { font-size: 17px; color: #1a2e1e; margin-bottom: 8px; }
-    .sin-rol-card p { font-size: 14px; color: #8a9e8d; line-height: 1.5; }
+    .sin-rol-card p  { font-size: 14px; color: #8a9e8d; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -127,7 +142,7 @@
       <div class="saludo">Bienvenido,</div>
       <div class="nombre" id="nombre-usuario">...</div>
       <div class="pills">
-        <span class="rol-pill" id="rol-label">...</span>
+        <span class="rol-pill"  id="rol-label">...</span>
         <span class="nivel-pill" id="nivel-label"></span>
       </div>
     </div>
@@ -166,10 +181,10 @@
             <p style="font-size:12px;color:#8a9e8d;margin-top:10px;">Esperando activación...</p>
           </div>
         </div>`;
-      // Escuchar en tiempo real — cuando admin asigne rol, recargar sin que el usuario haga nada
-      const { db } = await import("./js/firebase-config.js");
-      const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
-      onSnapshot(doc(db, "usuarios", usuario.uid), (snap) => {
+
+      const { db: db2 } = await import("./js/firebase-config.js");
+      const { doc: doc2, onSnapshot: onSnap2 } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
+      onSnap2(doc2(db2, "usuarios", usuario.uid), (snap) => {
         if (!snap.exists()) return;
         const nuevoRol = snap.data().rol || "sin_rol";
         if (nuevoRol !== "sin_rol") {
@@ -177,8 +192,9 @@
           window.location.reload();
         }
       });
+
     } else {
-      // Stats
+      // ── Stats ───────────────────────────────────────────────────────────────
       const mostrarStats = tienePermiso(rol, "ver_fondos") || tienePermiso(rol, "ver_inventario");
       if (mostrarStats) {
         const statsEl = document.createElement("div");
@@ -198,7 +214,7 @@
         if (tienePermiso(rol, "ver_fondos")) {
           onSnapshot(doc(db, "fondos", "principal"), (snap) => {
             document.getElementById("stat-fondo").textContent = snap.exists()
-              ? "$" + (snap.data().balance ?? 0).toLocaleString("es-CR", { minimumFractionDigits: 2 })
+              ? "$" + (snap.data().balance ?? 0).toLocaleString("es-PA", { minimumFractionDigits: 2 })
               : "$0.00";
           });
         }
@@ -214,17 +230,17 @@
         }
       }
 
-      // Módulos
+      // ── Módulos ─────────────────────────────────────────────────────────────
       const MODULOS = [
-        { label: "Registrar Ventas",  icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas",  admin: false },
-        { label: "Inventario",        icono: "📦", href: "inventario.html", permiso: "ver_inventario",    admin: false },
-        { label: "Bitácora",          icono: "📋", href: "bitacora.html",   permiso: "ver_bitacora",      admin: false },
-        { label: "Reportes",          icono: "📈", href: "reportes.html",   permiso: "ver_reportes",      admin: false },
-        { label: "Compras",           icono: "🛒", href: "compras.html",    permiso: "registrar_compras", admin: true  },
-        { label: "Fondos",            icono: "💳", href: "fondos.html",     permiso: "ver_fondos",        admin: true  },
-        { label: "Catálogo",          icono: "🗂️", href: "catalogo.html",   permiso: "editar_catalogo",   admin: true  },
-        { label: "Exportar",          icono: "📤", href: "exportar.html",   permiso: "exportar_datos",    admin: true  },
-        { label: "Usuarios",          icono: "👥", href: "usuarios.html",   permiso: "gestionar_usuarios",admin: true  },
+        { label: "Registrar Ventas", icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas",   admin: false },
+        { label: "Inventario",       icono: "📦", href: "inventario.html", permiso: "ver_inventario",     admin: false },
+        { label: "Bitácora",         icono: "📋", href: "bitacora.html",   permiso: "ver_bitacora",       admin: false },
+        { label: "Reportes",         icono: "📈", href: "reportes.html",   permiso: "ver_reportes",       admin: false },
+        { label: "Compras",          icono: "🛒", href: "compras.html",    permiso: "registrar_compras",  admin: true  },
+        { label: "Fondos",           icono: "💳", href: "fondos.html",     permiso: "ver_fondos",         admin: true  },
+        { label: "Catálogo",         icono: "🗂️", href: "catalogo.html",   permiso: "editar_catalogo",    admin: true  },
+        { label: "Exportar",         icono: "📤", href: "exportar.html",   permiso: "exportar_datos",     admin: true  },
+        { label: "Usuarios",         icono: "👥", href: "usuarios.html",   permiso: "gestionar_usuarios", admin: true  },
       ];
 
       const tituloEl = document.createElement("div");
@@ -235,12 +251,14 @@
       const grid = document.createElement("div");
       grid.className = "grid-modulos";
 
-      MODULOS.forEach(mod => {
+      MODULOS.forEach((mod, idx) => {
         const tiene = tienePermiso(rol, mod.permiso);
         const a = document.createElement("a");
         a.href = tiene ? mod.href : "#";
         a.className = "modulo-btn" + (tiene ? (mod.admin ? " mod-admin" : "") : " bloqueado");
         a.innerHTML = `<span class="icono">${mod.icono}</span><span class="label">${mod.label}</span>`;
+        // Delay escalonado para cascada
+        a.style.animationDelay = `${0.18 + idx * 0.06}s`;
         grid.appendChild(a);
       });
 

@@ -4,61 +4,66 @@ import {
   onSnapshot, query, orderBy, where, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-// ─── ICONOS PREDEFINIDOS POR CATEGORÍA ───────────────────────────────────────
+// ─── ICONOS DE CATEGORÍAS — 6 genéricos ──────────────────────────────────────
+export const ICONOS_CATEGORIA = [
+  { id: "cat_comida",   emoji: "🍔", label: "Comida" },
+  { id: "cat_bebidas",  emoji: "🥤", label: "Bebidas" },
+  { id: "cat_dulces",   emoji: "🍬", label: "Dulces" },
+  { id: "cat_snacks",   emoji: "🍿", label: "Snacks" },
+  { id: "cat_postres",  emoji: "🍰", label: "Postres" },
+  { id: "cat_otros",    emoji: "📦", label: "Otros" },
+];
+
+// ─── ICONOS DE PRODUCTOS — específicos por tipo ───────────────────────────────
+export const ICONOS_PRODUCTO = [
+  // Comida
+  { id: "hamburguesa", emoji: "🍔", label: "Hamburguesa" },
+  { id: "hotdog",      emoji: "🌭", label: "Hot Dog" },
+  { id: "sandwich",    emoji: "🥪", label: "Sandwich" },
+  { id: "wrap",        emoji: "🌯", label: "Wrap" },
+  { id: "pizza",       emoji: "🍕", label: "Pizza" },
+  { id: "pollo",       emoji: "🍗", label: "Pollo" },
+  { id: "papas",       emoji: "🍟", label: "Papas fritas" },
+  { id: "siu_mai",     emoji: "🥟", label: "Siu Mai" },
+  { id: "nachos",      emoji: "🧀", label: "Nachos" },
+  // Bebidas
+  { id: "soda",        emoji: "🥤", label: "Soda / Refresco" },
+  { id: "agua",        emoji: "💧", label: "Agua" },
+  { id: "cafe",        emoji: "☕", label: "Café" },
+  { id: "jugo",        emoji: "🍹", label: "Jugo" },
+  // Dulces & Postres
+  { id: "pudin",       emoji: "🍮", label: "Pudín / Flan" },
+  { id: "helado",      emoji: "🍦", label: "Helado" },
+  { id: "pastel",      emoji: "🎂", label: "Pastel / Torta" },
+  { id: "galleta",     emoji: "🍪", label: "Galleta" },
+  { id: "donut",       emoji: "🍩", label: "Dona" },
+  { id: "paleta",      emoji: "🍭", label: "Paleta" },
+  { id: "chocolate",   emoji: "🍫", label: "Chocolate" },
+  { id: "dulce",       emoji: "🍬", label: "Dulce / Caramelo" },
+  // Snacks
+  { id: "papitas",     emoji: "🥔", label: "Papitas" },
+  { id: "palomitas",   emoji: "🍿", label: "Palomitas" },
+  { id: "nueces",      emoji: "🥜", label: "Nueces / Maní" },
+  // Otros / General
+  { id: "ticket",      emoji: "🎟️", label: "Ticket / Entrada" },
+  { id: "regalo",      emoji: "🎁", label: "Regalo / Souvenir" },
+  { id: "producto",    emoji: "🏷️", label: "Producto general" },
+];
+
+// Mantener ICONOS y TODOS_ICONOS para compatibilidad con código existente
+// (catálogo y galería los usan como ICONOS[grupo] o TODOS_ICONOS)
 export const ICONOS = {
-  bebidas: [
-    { id: "lata",      emoji: "🥤", label: "Lata / Refresco" },
-    { id: "botella",   emoji: "🍶", label: "Botellas" },
-    { id: "agua",      emoji: "💧", label: "Agua" },
-    { id: "cafe",      emoji: "☕", label: "Café" },
-    { id: "jugo",      emoji: "🍹", label: "Jugo" },
-    { id: "cerveza",   emoji: "🍺", label: "Cerveza" },
-    { id: "vino",      emoji: "🍷", label: "Vino" },
-    { id: "leche",     emoji: "🥛", label: "Leche" },
-    { id: "te",        emoji: "🍵", label: "Té" },
-    { id: "coctel",    emoji: "🍸", label: "Cóctel" },
-  ],
-  comida: [
-    { id: "hamburguesa", emoji: "🍔", label: "Hamburguesa" },
-    { id: "pizza",       emoji: "🍕", label: "Pizza" },
-    { id: "sandwich",    emoji: "🥪", label: "Sandwich" },
-    { id: "hotdog",      emoji: "🌭", label: "Hot Dog" },
-    { id: "taco",        emoji: "🌮", label: "Taco" },
-    { id: "arroz",       emoji: "🍚", label: "Arroz / Plato" },
-    { id: "ensalada",    emoji: "🥗", label: "Ensalada" },
-    { id: "sopa",        emoji: "🍲", label: "Sopa" },
-    { id: "pollo",       emoji: "🍗", label: "Pollo" },
-    { id: "papas",       emoji: "🍟", label: "Papas fritas" },
-  ],
-  dulces: [
-    { id: "dulce",     emoji: "🍬", label: "Dulce / Caramelo" },
-    { id: "chocolate", emoji: "🍫", label: "Chocolate" },
-    { id: "helado",    emoji: "🍦", label: "Helado" },
-    { id: "pastel",    emoji: "🎂", label: "Pastel / Torta" },
-    { id: "galleta",   emoji: "🍪", label: "Galleta" },
-    { id: "donut",     emoji: "🍩", label: "Dona" },
-    { id: "paleta",    emoji: "🍭", label: "Paleta" },
-    { id: "chicle",    emoji: "🫧", label: "Chicle" },
-  ],
-  snacks: [
-    { id: "papitas",   emoji: "🥔", label: "Papitas / Snack" },
-    { id: "palomitas", emoji: "🍿", label: "Palomitas" },
-    { id: "nachos",    emoji: "🧀", label: "Nachos" },
-    { id: "nueces",    emoji: "🥜", label: "Nueces / Maní" },
-    { id: "pretzel",   emoji: "🥨", label: "Pretzel" },
-  ],
-  otros: [
-    { id: "caja",      emoji: "📦", label: "Caja / Paquete" },
-    { id: "bolsa",     emoji: "🛍️", label: "Bolsa" },
-    { id: "ticket",    emoji: "🎟️", label: "Ticket / Entrada" },
-    { id: "regalo",    emoji: "🎁", label: "Regalo / Souvenir" },
-    { id: "producto",  emoji: "🏷️", label: "Producto general" },
-    { id: "utensilio", emoji: "🍴", label: "Utensilio" },
-  ],
+  categorias: ICONOS_CATEGORIA,
+  productos:  ICONOS_PRODUCTO,
+  // Grupos legacy — apuntan a productos para que el renderGaleria siga funcionando
+  bebidas: ICONOS_PRODUCTO.filter(i => ["soda","agua","cafe","jugo"].includes(i.id)),
+  comida:  ICONOS_PRODUCTO.filter(i => ["hamburguesa","hotdog","sandwich","wrap","pizza","pollo","papas","siu_mai","nachos"].includes(i.id)),
+  dulces:  ICONOS_PRODUCTO.filter(i => ["pudin","helado","pastel","galleta","donut","paleta","chocolate","dulce"].includes(i.id)),
+  snacks:  ICONOS_PRODUCTO.filter(i => ["papitas","palomitas","nueces"].includes(i.id)),
+  otros:   ICONOS_PRODUCTO.filter(i => ["ticket","regalo","producto"].includes(i.id)),
 };
 
-// Todos los iconos en un array plano para búsqueda rápida
-export const TODOS_ICONOS = Object.values(ICONOS).flat();
+export const TODOS_ICONOS = [...ICONOS_CATEGORIA, ...ICONOS_PRODUCTO];
 
 export function getEmoji(iconoId) {
   const found = TODOS_ICONOS.find(i => i.id === iconoId);
@@ -86,7 +91,6 @@ export async function editarCategoria(id, nombre, iconoId) {
 }
 
 export async function eliminarCategoria(id) {
-  // Verificar que no tenga productos activos
   const q = query(collection(db, "productos"),
     where("categoriaId", "==", id),
     where("activo", "==", true));
@@ -115,8 +119,6 @@ export async function crearProducto(datos) {
 }
 
 export async function editarProducto(id, datos) {
-  // Solo se pueden editar: nombre, icono, precioVenta, alertaMinima
-  // NUNCA el stock desde aquí
   const { nombre, iconoId, precioVenta, alertaMinima } = datos;
   return updateDoc(doc(db, "productos", id), {
     nombre, iconoId, precioVenta, alertaMinima
@@ -132,9 +134,8 @@ export async function reactivarProducto(id) {
 }
 
 // ─── ESTADO DEL STOCK ────────────────────────────────────────────────────────
-// Devuelve: "ok" | "alerta" | "agotado"
 export function estadoStock(stock, alertaMinima) {
-  if (stock <= 0)             return "agotado";
-  if (stock <= alertaMinima)  return "alerta";
+  if (stock <= 0)            return "agotado";
+  if (stock <= alertaMinima) return "alerta";
   return "ok";
 }
