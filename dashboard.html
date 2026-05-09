@@ -155,8 +155,16 @@
     import { tienePermiso, infoRol } from "./js/permisos.js";
     import { db } from "./js/firebase-config.js";
     import {
-      doc, onSnapshot, collection, query, where
+      doc, getDoc, onSnapshot, collection, query, where
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    function manejarErrorSnapshot(error, contexto) {
+      if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
+        console.warn(`[Dashboard] Firestore denegó el listener en ${contexto}. Revisa las reglas de seguridad.`, error);
+        return;
+      }
+      console.error(`[Dashboard] Error en listener ${contexto}:`, error);
+    }
 
     guardRoute();
 
@@ -182,16 +190,22 @@
           </div>
         </div>`;
 
-      const { db: db2 } = await import("./js/firebase-config.js");
-      const { doc: doc2, onSnapshot: onSnap2 } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
-      onSnap2(doc2(db2, "usuarios", usuario.uid), (snap) => {
-        if (!snap.exists()) return;
-        const nuevoRol = snap.data().rol || "sin_rol";
-        if (nuevoRol !== "sin_rol") {
-          sessionStorage.setItem("rol", nuevoRol);
-          window.location.reload();
-        }
-      });
+          const refreshRol = async () => {
+            try {
+              const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+              if (!snap.exists()) return;
+              const nuevoRol = snap.data().rol || "sin_rol";
+              if (nuevoRol !== "sin_rol") {
+                sessionStorage.setItem("rol", nuevoRol);
+                window.location.reload();
+              }
+            } catch (error) {
+              manejarErrorSnapshot(error, "usuarios/{uid} refresh");
+            }
+          };
+
+          setInterval(refreshRol, 30000);
+          refreshRol();
 
     } else {
       // ── Stats ───────────────────────────────────────────────────────────────
@@ -212,21 +226,37 @@
         contenido.appendChild(statsEl);
 
         if (tienePermiso(rol, "ver_fondos")) {
-          onSnapshot(doc(db, "fondos", "principal"), (snap) => {
-            document.getElementById("stat-fondo").textContent = snap.exists()
-              ? "$" + (snap.data().balance ?? 0).toLocaleString("es-PA", { minimumFractionDigits: 2 })
-              : "$0.00";
-          });
+          onSnapshot(
+            doc(db, "fondos", "principal"),
+            (snap) => {
+              document.getElementById("stat-fondo").textContent = snap.exists()
+                ? "$" + (snap.data().balance ?? 0).toLocaleString("es-PA", { minimumFractionDigits: 2 })
+                : "$0.00";
+            },
+            (error) => {
+              document.getElementById("stat-fondo").textContent = "No disponible";
+              manejarErrorSnapshot(error, "fondos/principal");
+            }
+          );
         }
 
         if (tienePermiso(rol, "ver_inventario")) {
-          onSnapshot(query(collection(db, "productos"), where("activo","==",true)), (snap) => {
-            let bajos = 0;
-            snap.forEach(d => { const p = d.data(); if ((p.stock??0) <= (p.alertaMinima??0)) bajos++; });
-            const el = document.getElementById("stat-alertas");
-            el.textContent = bajos === 0 ? "Todo OK ✓" : `${bajos} producto${bajos>1?"s":""}`;
-            el.className   = bajos === 0 ? "stat-ok" : "stat-alerta";
-          });
+          onSnapshot(
+            query(collection(db, "productos"), where("activo","==",true)),
+            (snap) => {
+              let bajos = 0;
+              snap.forEach(d => { const p = d.data(); if ((p.stock??0) <= (p.alertaMinima??0)) bajos++; });
+              const el = document.getElementById("stat-alertas");
+              el.textContent = bajos === 0 ? "Todo OK" : `${bajos} producto${bajos>1?"s":""}`;
+              el.className   = bajos === 0 ? "stat-ok" : "stat-alerta";
+            },
+            (error) => {
+              const el = document.getElementById("stat-alertas");
+              el.textContent = "No disponible";
+              el.className = "stat-valor";
+              manejarErrorSnapshot(error, "productos activos");
+            }
+          );
         }
       }
 
@@ -234,6 +264,7 @@
       const MODULOS = [
         { label: "Registrar Ventas", icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas",   admin: false },
         { label: "Inventario",       icono: "📦", href: "inventario.html", permiso: "ver_inventario",     admin: false },
+        { label: "Ajustes de Inventario",          icono: "🛠️", href: "ajustesInventario.html", permiso: "ajustar_inventario", admin: false },
         { label: "Bitácora",         icono: "📋", href: "bitacora.html",   permiso: "ver_bitacora",       admin: false },
         { label: "Reportes",         icono: "📈", href: "reportes.html",   permiso: "ver_reportes",       admin: false },
         { label: "Compras",          icono: "🛒", href: "compras.html",    permiso: "registrar_compras",  admin: true  },

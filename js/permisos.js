@@ -33,12 +33,14 @@ export const PERMISOS = {
   registrar_compras: ["junta", "finanzas", "logistica"],
   ver_fondos:        ["junta", "finanzas"],
   editar_fondos:     ["junta", "finanzas"],
+  ajustar_inventario:["junta", "finanzas", "logistica"],
   ver_bitacora:      ["junta","coordinador","finanzas","logistica","ventas","secretario","actividades","patrocinios","investigacion","voluntariado","giras","comunicaciones","miembro"],
   ver_reportes:      ["junta","coordinador","finanzas","logistica","ventas","secretario","actividades","patrocinios","investigacion","voluntariado","giras","comunicaciones","miembro"],
   editar_catalogo:   ["junta", "coordinador", "finanzas", "logistica", "actividades"],
   ver_precios:       ["junta", "coordinador", "finanzas"],
   aprobar_gastos:    ["junta", "coordinador"],
   exportar_datos:    ["junta", "coordinador", "finanzas", "logistica", "actividades"],
+  gestionar_usuarios:["ceo", "junta", "coordinador", "finanzas"],
 };
 
 // Función para verificar si un rol tiene un permiso
