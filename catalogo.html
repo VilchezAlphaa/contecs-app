@@ -477,6 +477,10 @@
       document.getElementById("cat-nombre-input").value = "";
       document.getElementById("cat-icono-sel").value   = "";
       document.getElementById("cat-edit-id").value     = "";
+      // Resetear el botón
+      const btn = document.getElementById("btn-guardar-cat");
+      btn.disabled = false;
+      btn.textContent = "Guardar categoría";
       renderGaleria("galeria-cat", "cat-icono-sel", "categoria"); // ← 6 genéricos
       abrirModal("modal-cat");
     });
@@ -485,12 +489,21 @@
       document.getElementById("modal-cat-titulo").textContent = "Editar categoría";
       document.getElementById("cat-nombre-input").value = cat.nombre;
       document.getElementById("cat-edit-id").value      = cat.id;
+      // Resetear el botón
+      const btn = document.getElementById("btn-guardar-cat");
+      btn.disabled = false;
+      btn.textContent = "Guardar categoría";
       renderGaleria("galeria-cat", "cat-icono-sel", "categoria"); // ← 6 genéricos
       setTimeout(() => seleccionarIconoEnGaleria("galeria-cat", "cat-icono-sel", cat.iconoId), 50);
       abrirModal("modal-cat");
     }
 
     document.getElementById("btn-guardar-cat").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-guardar-cat");
+      
+      // Evitar múltiples clics
+      if (btn.disabled) return;
+      
       const nombre  = document.getElementById("cat-nombre-input").value.trim();
       const iconoId = document.getElementById("cat-icono-sel").value;
       const editId  = document.getElementById("cat-edit-id").value;
@@ -499,16 +512,26 @@
       if (!iconoId) { document.getElementById("cat-icono-error").style.display = "block"; return; }
       document.getElementById("cat-icono-error").style.display = "none";
 
+      // Bloquear el botón y cambiar texto
+      btn.disabled = true;
+      const textoOriginal = btn.textContent;
+      btn.textContent = "⏳ Guardando...";
+
       try {
         if (editId) {
           await editarCategoria(editId, nombre, iconoId);
+          btn.textContent = "✅ Actualizado";
           mostrarAlerta("cat-ok", "Categoría actualizada correctamente.", "success");
         } else {
           await crearCategoria(nombre, iconoId);
+          btn.textContent = "✅ Creado";
           mostrarAlerta("cat-ok", "Categoría creada correctamente.", "success");
         }
         cerrarModal("modal-cat");
       } catch(e) {
+        // Reactivar el botón en caso de error
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
         mostrarAlerta("cat-error", "Error al guardar. Intenta de nuevo.");
       }
     });
@@ -640,6 +663,10 @@
       document.getElementById("prod-icono-sel").value    = "";
       document.getElementById("prod-edit-id").value      = "";
       document.getElementById("prod-cat-id").value       = catId;
+      // Resetear el botón
+      const btn = document.getElementById("btn-guardar-prod");
+      btn.disabled = false;
+      btn.textContent = "Guardar producto";
       renderGaleria("galeria-prod", "prod-icono-sel", "producto"); // ← iconos específicos
       abrirModal("modal-prod");
     }
@@ -651,12 +678,21 @@
       document.getElementById("prod-alerta-input").value = prod.alertaMinima ?? "";
       document.getElementById("prod-edit-id").value      = prod.id;
       document.getElementById("prod-cat-id").value       = prod.categoriaId;
+      // Resetear el botón
+      const btn = document.getElementById("btn-guardar-prod");
+      btn.disabled = false;
+      btn.textContent = "Guardar producto";
       renderGaleria("galeria-prod", "prod-icono-sel", "producto"); // ← iconos específicos
       setTimeout(() => seleccionarIconoEnGaleria("galeria-prod", "prod-icono-sel", prod.iconoId), 50);
       abrirModal("modal-prod");
     }
 
     document.getElementById("btn-guardar-prod").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-guardar-prod");
+      
+      // Evitar múltiples clics
+      if (btn.disabled) return;
+      
       const nombre      = document.getElementById("prod-nombre-input").value.trim();
       const precio      = parseFloat(document.getElementById("prod-precio-input").value);
       const alerta      = parseInt(document.getElementById("prod-alerta-input").value);
@@ -668,18 +704,28 @@
       if (isNaN(precio)) { mostrarAlerta("prod-error", "Escribe un precio válido."); return; }
       if (!iconoId)      { mostrarAlerta("prod-error", "Selecciona un icono."); return; }
 
+      // Bloquear el botón y cambiar texto
+      btn.disabled = true;
+      const textoOriginal = btn.textContent;
+      btn.textContent = "⏳ Guardando...";
+
       const datos = { nombre, precioVenta: precio, alertaMinima: isNaN(alerta) ? 0 : alerta, iconoId, categoriaId };
 
       try {
         if (editId) {
           await editarProducto(editId, datos);
+          btn.textContent = "✅ Actualizado";
           mostrarAlerta("prod-ok", "Producto actualizado.", "success");
         } else {
           await crearProducto(datos);
+          btn.textContent = "✅ Creado";
           mostrarAlerta("prod-ok", "Producto creado con stock inicial en 0. Registra una compra para añadir stock.", "success");
         }
         cerrarModal("modal-prod");
       } catch(e) {
+        // Reactivar el botón en caso de error
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
         mostrarAlerta("prod-error", "Error al guardar. Intenta de nuevo.");
       }
     });
