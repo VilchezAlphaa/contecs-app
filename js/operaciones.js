@@ -562,3 +562,158 @@ export async function registrarMovimientoFondo({ usuarioId, usuarioNombre = "", 
     return { id: fondoMovimientoRef.id, balance: nuevoBalance };
   });
 }
+
+// ── VENTA + MERMA (registro unificado) ────────────────────────────────────────
+// Registra la venta normalmente (descuenta stock + suma fondos) y, si hay
+// ítems de merma, los descuenta del inventario SIN mover fondos, todo en
+// una sola transacción atómica.
+export async function registrarVentaConMerma({
+  usuarioId,
+  usuarioNombre = "",
+  items,                 // items de venta (array)
+  nota = "",
+  mermaItems = [],       // items de merma (array, puede estar vacío)
+  motivoMerma = "",
+}) {
+  if (!usuarioId) throw new Error("No se pudo identificar al usuario.");
+  if (!Array.isArray(items) || items.length === 0) throw new Error("Agrega al menos un producto.");
+  if (mermaItems.length > 0 && !motivoMerma.trim()) throw new Error("El motivo de la merma es requerido.");
+
+  const ventaRef           = doc(collection(db, "ventas"));
+  const fondoMovimientoRef = crearMovimientoFondoRef();
+  const movVentaRefs       = items.map(() => crearMovimientoInventarioRef());
+  const movMermaRefs       = mermaItems.map(() => crearMovimientoInventarioRef());
+  const mermaRef           = mermaItems.length > 0 ? doc(collection(db, "mermas")) : null;
+
+  return runTransaction(db, async (tx) => {
+    const fondoSnap = await tx.get(fondoRef());
+
+    // Leer productos de VENTA
+    const lectVenta = await leerProductosTx(tx, items);
+    // Leer productos de MERMA (solo los que no estén ya en lectVenta)
+    const lectMerma = await leerProductosTx(tx, mermaItems);
+
+    // ── Procesar VENTA ────────────────────────────────────────────────────────
+    const lineas = [];
+    let total = 0;
+
+    for (let i = 0; i < lectVenta.length; i++) {
+      const { ref: prodRef, snap: prodSnap, item } = lectVenta[i];
+      if (!prodSnap.exists()) throw new Error(`Producto ${item.nombre || ""} no encontrado.`);
+      const prod        = prodSnap.data();
+      const cantidad    = cantidadItem(item);
+      const stockActual = aNumero(prod.stock, 0);
+      if (stockActual < cantidad) throw new Error(`Stock insuficiente para ${nombreProducto(item, prod)}.`);
+
+      const unitario   = precioItem(item, prod, "precioVenta");
+      const subtotal   = unitario * cantidad;
+      const nuevoStock = stockActual - cantidad;
+
+      tx.update(prodRef, { stock: nuevoStock, actualizadoEn: serverTimestamp() });
+      tx.set(movVentaRefs[i], {
+        tipo: "salida", origen: "venta",
+        productoId: item.productoId,
+        nombre:     nombreProducto(item, prod),
+        cantidad, antes: stockActual, despues: nuevoStock,
+        motivo: "Venta registrada",
+        referenciaId: ventaRef.id,
+        usuarioId, creadoEn: serverTimestamp(),
+      });
+
+      lineas.push({
+        productoId: item.productoId,
+        nombre:     nombreProducto(item, prod),
+        cantidad, precioUnitario: unitario, subtotal,
+      });
+      total += subtotal;
+    }
+
+    // ── Procesar MERMA ────────────────────────────────────────────────────────
+    const lineasMerma = [];
+
+    for (let i = 0; i < lectMerma.length; i++) {
+      const { ref: prodRef, snap: prodSnap, item } = lectMerma[i];
+      if (!prodSnap.exists()) throw new Error(`Producto de merma ${item.nombre || ""} no encontrado.`);
+      const prod        = prodSnap.data();
+      const cantidad    = cantidadItem(item);
+      const stockActual = aNumero(prod.stock, 0);
+      // Stock actual ya considera lo que se vendió en la misma tx
+      // (Firestore usa lecturas al inicio de la tx, así que stockActual
+      //  es el stock ANTES de la venta — restamos primero la venta si el
+      //  producto también está en la venta)
+      const cantVendida = lectVenta
+        .filter(l => l.item.productoId === item.productoId)
+        .reduce((s, l) => s + cantidadItem(l.item), 0);
+      const stockReal = stockActual - cantVendida;
+      if (stockReal < cantidad) throw new Error(`Stock insuficiente para merma de ${nombreProducto(item, prod)}.`);
+
+      const nuevoStock = stockReal - cantidad;
+
+      // Si el producto también está en venta, el update de stock ya
+      // se hizo — usamos la ref del movimiento de venta y ajustamos.
+      // Más simple: re-update con el valor combinado.
+      const yaEnVenta = lectVenta.find(l => l.item.productoId === item.productoId);
+      if (yaEnVenta) {
+        const stockFinalCombinado = aNumero(yaEnVenta.snap.data().stock, 0) - cantVendida - cantidad;
+        tx.update(prodRef, { stock: stockFinalCombinado, actualizadoEn: serverTimestamp() });
+      } else {
+        tx.update(prodRef, { stock: nuevoStock, actualizadoEn: serverTimestamp() });
+      }
+
+      tx.set(movMermaRefs[i], {
+        tipo: "salida", origen: "merma",
+        productoId: item.productoId,
+        nombre:     nombreProducto(item, prod),
+        cantidad, antes: stockActual, despues: nuevoStock,
+        motivo: motivoMerma.trim(),
+        referenciaId: mermaRef.id,
+        usuarioId, creadoEn: serverTimestamp(),
+      });
+
+      lineasMerma.push({
+        productoId: item.productoId,
+        nombre:     nombreProducto(item, prod),
+        cantidad,
+      });
+    }
+
+    // ── Fondos (solo venta, NO merma) ─────────────────────────────────────────
+    const balanceActual = fondoSnap.exists() ? aNumero(fondoSnap.data().balance, 0) : 0;
+    const nuevoBalance  = balanceActual + total;
+
+    tx.set(fondoRef(), { balance: nuevoBalance, actualizadoEn: serverTimestamp() }, { merge: true });
+    tx.set(fondoMovimientoRef, {
+      tipo: "ingreso", origen: "venta",
+      monto: total,
+      descripcion: nota || resumenItemPrincipal(lineas),
+      titulo:      resumenItemPrincipal(lineas),
+      referenciaId: ventaRef.id,
+      usuarioId, usuarioNombre, creadoEn: serverTimestamp(),
+    });
+
+    // ── Documento de venta (incluye mermas como campo aparte) ─────────────────
+    tx.set(ventaRef, {
+      usuarioId, usuarioNombre,
+      items: lineas,
+      total,
+      metodoPago: "efectivo/transferencia",
+      nota,
+      mermas: lineasMerma,
+      motivoMerma: motivoMerma.trim() || null,
+      creadoEn: serverTimestamp(),
+    });
+
+    // ── Documento de merma independiente (para bitácora tab mermas) ───────────
+    if (mermaRef && lineasMerma.length > 0) {
+      tx.set(mermaRef, {
+        usuarioId, usuarioNombre,
+        items: lineasMerma,
+        motivo: motivoMerma.trim(),
+        referenciaVenta: ventaRef.id,
+        creadoEn: serverTimestamp(),
+      });
+    }
+
+    return { id: ventaRef.id, total, balance: nuevoBalance };
+  });
+}

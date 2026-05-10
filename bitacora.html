@@ -283,6 +283,18 @@
             ? `<p style="margin-top:8px;font-size:12px;color:var(--gris-medio);">📝 ${v.nota}</p>`
             : "";
 
+          // Mermas dentro de este mismo registro de venta
+          const mermasHTML = (Array.isArray(v.mermas) && v.mermas.length > 0)
+            ? `<div style="margin-top:12px;padding:10px 12px;background:var(--rojo-fondo);border-radius:8px;border:1px solid rgba(192,57,43,.15);">
+                <div style="font-size:12px;font-weight:700;color:var(--rojo);margin-bottom:6px;">⚠️ Merma registrada</div>
+                ${v.mermas.map(m => `
+                  <div style="font-size:12px;color:var(--gris-texto);margin-bottom:2px;">
+                    ${m.nombre || "—"} — ${m.cantidad ?? 0} und.
+                  </div>`).join("")}
+                ${v.motivoMerma ? `<div style="font-size:11px;color:var(--rojo);margin-top:6px;">Motivo: ${v.motivoMerma}</div>` : ""}
+              </div>`
+            : "";
+
           card.innerHTML = `
             <div class="bita-header">
               <div class="bita-meta">
@@ -290,7 +302,7 @@
                 <div class="bita-usuario">👤 ${v.usuarioNombre || "—"}</div>
               </div>
               <span class="bita-total">${formatearMoneda(v.total ?? 0)}</span>
-              <span class="bita-metodo">${metodoTexto}</span>
+              <span class="bita-metodo">Efectivo / Transferencia</span>
               <span class="bita-chevron">▼</span>
             </div>
             <div class="bita-body">
@@ -306,6 +318,7 @@
                 <tbody>${itemsHTML}</tbody>
               </table>
               ${notaHTML}
+              ${mermasHTML}
             </div>`;
 
           card.querySelector(".bita-header").addEventListener("click", () => toggleCard(card));
