@@ -37,6 +37,10 @@ usuarios/{uid}/
   email: "tu@correo.com"
 ```
 
+## Login con Google en GitHub Pages
+Si la app está publicada en GitHub Pages, agrega el dominio del sitio en Firebase Console → Authentication → Settings → Authorized domains.
+El error `auth/unauthorized-domain` aparece cuando el host actual, por ejemplo `vilchezalphaa.github.io`, todavía no está en esa lista.
+
 ## Estado del desarrollo
 - [x] Fase 0 — Configuración y estructura base
 - [x] Fase 1 — Autenticación y roles

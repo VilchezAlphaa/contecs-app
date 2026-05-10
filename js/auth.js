@@ -17,10 +17,22 @@ function esErrorDePermisosFirestore(error) {
   return error?.code === "permission-denied" || error?.code === "firestore/permission-denied";
 }
 
+function esErrorDeDominioNoAutorizado(error) {
+  return error?.code === "auth/unauthorized-domain";
+}
+
 function manejarErrorAuth(error, contexto) {
   if (esErrorDePermisosFirestore(error)) {
     console.error(
       `[Auth] Firestore bloqueó la operación (${contexto}). Revisa tus reglas: el usuario autenticado debe poder leer/escribir su propio documento en usuarios/{uid}.`,
+      error
+    );
+    return;
+  }
+
+  if (esErrorDeDominioNoAutorizado(error)) {
+    console.error(
+      `[Auth] El dominio actual no está autorizado para OAuth (${contexto}). Agrega ${window.location.hostname} en Firebase Console > Authentication > Settings > Authorized domains.`,
       error
     );
     return;

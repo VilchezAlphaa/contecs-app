@@ -180,6 +180,8 @@
         if (e.code === "auth/popup-closed-by-user") return;
         if (e.code === "auth/popup-blocked") {
           msgError.textContent = "⚠️ El navegador bloqueó la ventana emergente. Permite popups para este sitio e intenta de nuevo.";
+        } else if (e.code === "auth/unauthorized-domain") {
+          msgError.textContent = "⚠️ Firebase no tiene autorizado este dominio para iniciar sesión. Agrega este sitio en Firebase Console > Authentication > Settings > Authorized domains y vuelve a intentar.";
         } else {
           msgError.textContent = "❌ Error al iniciar sesión. Intenta de nuevo.";
         }
