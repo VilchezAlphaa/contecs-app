@@ -1,3 +1,4 @@
+
 import { auth, db } from "./firebase-config.js";
 import {
   signInWithPopup,
@@ -12,33 +13,6 @@ import { tienePermiso } from "./permisos.js";
 
 const provider = new GoogleAuthProvider();
 const PUBLIC_PAGES = ["index.html", ""];
-
-function esErrorDePermisosFirestore(error) {
-  return error?.code === "permission-denied" || error?.code === "firestore/permission-denied";
-}
-
-function esErrorDeDominioNoAutorizado(error) {
-  return error?.code === "auth/unauthorized-domain";
-}
-
-function manejarErrorAuth(error, contexto) {
-  if (esErrorDePermisosFirestore(error)) {
-    console.error(
-      `[Auth] Firestore bloqueó la operación (${contexto}). Revisa tus reglas: el usuario autenticado debe poder leer/escribir su propio documento en usuarios/{uid}.`,
-      error
-    );
-    return;
-  }
-
-  if (esErrorDeDominioNoAutorizado(error)) {
-    console.error(
-      `[Auth] El dominio actual no está autorizado para OAuth (${contexto}). Agrega ${window.location.hostname} en Firebase Console > Authentication > Settings > Authorized domains.`,
-      error
-    );
-    return;
-  }
-  console.error(`[Auth] Error en ${contexto}:`, error);
-}
 
 // Escucha cambios en el documento del usuario en Firestore en tiempo real
 // Si el rol cambia, actualiza sessionStorage y recarga la página automáticamente
@@ -62,80 +36,50 @@ export function escucharCambiosDeRol(uid) {
 export function guardRoute() {
   const page = window.location.pathname.split("/").pop() || "index.html";
   onAuthStateChanged(auth, async (user) => {
-    try {
-      if (!user && !PUBLIC_PAGES.includes(page)) {
-        window.location.href = "index.html";
-      } else if (user && PUBLIC_PAGES.includes(page)) {
-        await cargarUsuario(user);
-        window.location.href = "dashboard.html";
-      } else if (user && !PUBLIC_PAGES.includes(page)) {
-        // Ya autenticado en página protegida — escuchar cambios de rol
-        escucharCambiosDeRol(user.uid);
-      }
-    } catch (error) {
-      manejarErrorAuth(error, "guardRoute/onAuthStateChanged");
+    if (!user && !PUBLIC_PAGES.includes(page)) {
+      window.location.href = "index.html";
+    } else if (user && PUBLIC_PAGES.includes(page)) {
+      await cargarUsuario(user);
+      window.location.href = "dashboard.html";
+    } else if (user && !PUBLIC_PAGES.includes(page)) {
+      // Ya autenticado en página protegida — escuchar cambios de rol
+      escucharCambiosDeRol(user.uid);
     }
   });
 }
 
 async function cargarUsuario(user) {
   const ref  = doc(db, "usuarios", user.uid);
-  const nombreFallback = user.displayName || user.email;
-  const rolFallback = "sin_rol";
+  const snap = await getDoc(ref);
 
-  try {
-    const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      // Usuario ya existe — cargar sus datos
-      const data = snap.data();
-      sessionStorage.setItem("uid",    user.uid);
-      sessionStorage.setItem("nombre", data.nombre || nombreFallback);
-      sessionStorage.setItem("rol",    data.rol || rolFallback);
-      sessionStorage.setItem("email",  user.email);
-      return;
-    }
-
+  if (snap.exists()) {
+    // Usuario ya existe — cargar sus datos
+    const data = snap.data();
+    sessionStorage.setItem("uid",    user.uid);
+    sessionStorage.setItem("nombre", data.nombre || user.displayName || user.email);
+    sessionStorage.setItem("rol",    data.rol || "sin_rol");
+    sessionStorage.setItem("email",  user.email);
+  } else {
     // Primera vez que entra — crear documento automáticamente con sin_rol
     const nuevoUsuario = {
-      nombre:    nombreFallback,
+      nombre:    user.displayName || user.email,
       email:     user.email,
       foto:      user.photoURL || "",
-      rol:       rolFallback,
+      rol:       "sin_rol",
       creadoEn:  serverTimestamp(),
     };
     await setDoc(ref, nuevoUsuario);
     sessionStorage.setItem("uid",    user.uid);
     sessionStorage.setItem("nombre", nuevoUsuario.nombre);
-    sessionStorage.setItem("rol",    rolFallback);
+    sessionStorage.setItem("rol",    "sin_rol");
     sessionStorage.setItem("email",  user.email);
-  } catch (error) {
-    if (!esErrorDePermisosFirestore(error)) {
-      throw error;
-    }
-
-    // Si Firestore no deja leer/escribir usuarios/{uid}, no bloqueamos el login.
-    // El usuario entra con los datos básicos de Firebase Auth y rol provisional.
-    sessionStorage.setItem("uid",    user.uid);
-    sessionStorage.setItem("nombre", nombreFallback);
-    sessionStorage.setItem("rol",    rolFallback);
-    sessionStorage.setItem("email",  user.email);
-    console.warn(
-      `[Auth] Firestore no permitió acceder a usuarios/${user.uid}. Se usaron datos de respaldo de Auth.`,
-      error
-    );
   }
 }
 
 export async function loginConGoogle() {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    await cargarUsuario(result.user);
-    return result.user;
-  } catch (error) {
-    manejarErrorAuth(error, "loginConGoogle");
-    throw error;
-  }
+  const result = await signInWithPopup(auth, provider);
+  await cargarUsuario(result.user);
+  return result.user;
 }
 
 export async function cerrarSesion() {
