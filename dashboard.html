@@ -66,6 +66,8 @@
     }
     .stat-card:nth-child(1) { animation-delay: 0.12s; }
     .stat-card:nth-child(2) { animation-delay: 0.20s; }
+    .stat-card:nth-child(3) { animation-delay: 0.28s; }
+    .stat-card:nth-child(4) { animation-delay: 0.36s; }
 
     .stat-label  { font-size: 12px; color: #8a9e8d; margin-bottom: 4px; }
     .stat-valor  { font-size: 19px; font-weight: 700; color: #00722e; }
@@ -155,8 +157,9 @@
     import { tienePermiso, infoRol } from "./js/permisos.js";
     import { db } from "./js/firebase-config.js";
     import {
-      doc, getDoc, onSnapshot, collection, query, where
+      doc, getDoc, onSnapshot, collection, query, where, getDocs
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    import { formatearMoneda } from "./js/operaciones.js";
 
     function manejarErrorSnapshot(error, contexto) {
       if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
@@ -222,8 +225,53 @@
           <div class="stat-card">
             <div class="stat-label">⚠️ Stock bajo</div>
             <div id="stat-alertas" class="stat-valor">${tienePermiso(rol,"ver_inventario") ? "Cargando..." : "—"}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">📈 Ventas este mes</div>
+            <div id="stat-ventas-mes" class="stat-valor">Cargando...</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🛒 Compras este mes</div>
+            <div id="stat-compras-mes" class="stat-valor">Cargando...</div>
           </div>`;
         contenido.appendChild(statsEl);
+
+        // ── Stats mes actual ──────────────────────────────────────────────────
+        const ahora = new Date();
+        const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        const finMes    = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59);
+
+        // Ventas del mes
+        getDocs(query(
+          collection(db, "ventas"),
+          where("creadoEn", ">=", inicioMes),
+          where("creadoEn", "<=", finMes)
+        )).then(snap => {
+          let total = 0;
+          snap.forEach(d => total += (d.data().total ?? 0));
+          const el = document.getElementById("stat-ventas-mes");
+          if (el) el.textContent = formatearMoneda(total);
+        }).catch(err => {
+          const el = document.getElementById("stat-ventas-mes");
+          if (el) el.textContent = "—";
+          manejarErrorSnapshot(err, "ventas del mes");
+        });
+
+        // Compras del mes
+        getDocs(query(
+          collection(db, "compras"),
+          where("creadoEn", ">=", inicioMes),
+          where("creadoEn", "<=", finMes)
+        )).then(snap => {
+          let total = 0;
+          snap.forEach(d => total += (d.data().total ?? 0));
+          const el = document.getElementById("stat-compras-mes");
+          if (el) el.textContent = formatearMoneda(total);
+        }).catch(err => {
+          const el = document.getElementById("stat-compras-mes");
+          if (el) el.textContent = "—";
+          manejarErrorSnapshot(err, "compras del mes");
+        });
 
         if (tienePermiso(rol, "ver_fondos")) {
           onSnapshot(

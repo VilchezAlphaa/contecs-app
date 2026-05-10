@@ -3,27 +3,395 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CONTECS — Exportar</title>
+  <title>CONTECS — Exportar Datos</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <style>
+    /* ── SELECTOR DE TIPO ── */
+    .tipo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tipo-opt {
+      border: 2px solid var(--gris-borde);
+      border-radius: var(--radio);
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: #fff;
+      user-select: none;
+    }
+    .tipo-opt:hover { border-color: var(--verde-claro); background: var(--gris-suave); }
+    .tipo-opt.seleccionado {
+      border-color: var(--verde);
+      background: var(--verde-fondo);
+    }
+    .tipo-opt .t-icono { font-size: 24px; margin-bottom: 6px; }
+    .tipo-opt .t-label { font-size: 13px; font-weight: 600; color: var(--gris-texto); line-height: 1.3; }
+    .tipo-opt.seleccionado .t-label { color: var(--verde-oscuro); }
+
+    /* ── FILTRO FECHAS ── */
+    .fechas-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .fechas-row .form-group { margin-bottom: 0; }
+
+    /* ── INFO BADGE ── */
+    .info-badge {
+      background: var(--amarillo-fondo);
+      border: 1px solid #f0c040;
+      border-radius: var(--radio-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #5a3e00;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .info-badge.show { display: block; }
+
+    /* ── PREVIEW CARD ── */
+    .preview-card {
+      background: var(--gris-suave);
+      border-radius: var(--radio-sm);
+      padding: 14px;
+      font-size: 12px;
+      color: var(--gris-medio);
+      margin-top: 16px;
+      border: 1px solid var(--gris-borde);
+      display: none;
+    }
+    .preview-card.show { display: block; }
+    .preview-card strong { color: var(--gris-texto); }
+  </style>
 </head>
 <body>
   <div class="topbar">
-    <h1>Exportar Datos</h1>
+    <h1>📤 Exportar</h1>
     <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
   </div>
+
   <div class="container">
-    <div class="card" style="text-align:center;padding:40px 20px;">
-      <div style="font-size:48px;margin-bottom:12px;">📤</div>
-      <div class="card-title" style="justify-content:center;">Módulo en construcción</div>
-      <p style="color:var(--gris-medio);font-size:14px;">
-        Este módulo estará disponible en la Fase 8.<br>
-        Aquí podrás exportar reportes y bitácoras en PDF o Excel.
-      </p>
+    <div class="seccion-titulo">Exportar datos a CSV</div>
+
+    <!-- Tipo de datos -->
+    <div class="card">
+      <div class="card-title">¿Qué deseas exportar?</div>
+      <div class="tipo-grid" id="tipo-grid">
+        <div class="tipo-opt seleccionado" data-tipo="ventas">
+          <div class="t-icono">🧾</div>
+          <div class="t-label">Ventas</div>
+        </div>
+        <div class="tipo-opt" data-tipo="compras">
+          <div class="t-icono">🛒</div>
+          <div class="t-label">Compras</div>
+        </div>
+        <div class="tipo-opt" data-tipo="fondos">
+          <div class="t-icono">💳</div>
+          <div class="t-label">Movimientos de Fondos</div>
+        </div>
+        <div class="tipo-opt" data-tipo="inventario">
+          <div class="t-icono">📦</div>
+          <div class="t-label">Movimientos de Inventario</div>
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div class="fechas-row">
+        <div class="form-group">
+          <label for="fecha-inicio">Fecha inicio</label>
+          <input type="date" id="fecha-inicio"/>
+        </div>
+        <div class="form-group">
+          <label for="fecha-fin">Fecha fin</label>
+          <input type="date" id="fecha-fin"/>
+        </div>
+      </div>
+
+      <div class="info-badge" id="info-columnas"></div>
+
+      <button class="btn btn-primary" id="btn-exportar" style="width:100%;">
+        ⬇️ Exportar CSV
+      </button>
+
+      <div class="alerta alerta-error" id="alerta-error"></div>
+      <div class="alerta alerta-success" id="alerta-ok"></div>
+
+      <div class="preview-card" id="preview-card">
+        <strong>Archivo generado:</strong> <span id="preview-nombre">—</span><br/>
+        <span id="preview-filas">—</span> filas exportadas.
+      </div>
     </div>
   </div>
+
   <script type="module">
-    import { guardRoute } from "./js/auth.js";
+    import { guardRoute, requirePermiso } from "./js/auth.js";
+    import { formatearMoneda } from "./js/operaciones.js";
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, where, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
     guardRoute();
+    requirePermiso("exportar_datos");
+
+    // ── Helper fecha ──────────────────────────────────────────────────────────
+    function formatearFecha(ts) {
+      if (!ts) return "";
+      const f = ts.toDate ? ts.toDate() : new Date(ts);
+      return f.toLocaleDateString("es-PA", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    // ── Defaults: mes actual ──────────────────────────────────────────────────
+    const hoy = new Date();
+    const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    function toInputDate(d) { return d.toISOString().split("T")[0]; }
+    document.getElementById("fecha-inicio").value = toInputDate(primerDia);
+    document.getElementById("fecha-fin").value     = toInputDate(ultimoDia);
+
+    // ── Tipo seleccionado ─────────────────────────────────────────────────────
+    let tipoSeleccionado = "ventas";
+
+    const COLUMNAS_INFO = {
+      ventas:     "Columnas: Fecha, Usuario, Total, Método de pago, Nota, Items (detalle por fila)",
+      compras:    "Columnas: Fecha, Usuario, Proveedor, Total, Método de pago, Nota, Factura URL",
+      fondos:     "Columnas: Fecha, Tipo, Origen, Título, Descripción, Monto, Usuario",
+      inventario: "Columnas: Fecha, Tipo, Producto, Cantidad, Stock anterior, Stock posterior, Origen, Motivo"
+    };
+
+    const infoBadge = document.getElementById("info-columnas");
+    function actualizarInfo() {
+      infoBadge.textContent = "📋 " + COLUMNAS_INFO[tipoSeleccionado];
+      infoBadge.classList.add("show");
+    }
+    actualizarInfo();
+
+    document.getElementById("tipo-grid").addEventListener("click", (e) => {
+      const opt = e.target.closest(".tipo-opt");
+      if (!opt) return;
+      document.querySelectorAll(".tipo-opt").forEach(o => o.classList.remove("seleccionado"));
+      opt.classList.add("seleccionado");
+      tipoSeleccionado = opt.dataset.tipo;
+      actualizarInfo();
+      ocultarAlertas();
+      document.getElementById("preview-card").classList.remove("show");
+    });
+
+    // ── Alertas ───────────────────────────────────────────────────────────────
+    const alertaError = document.getElementById("alerta-error");
+    const alertaOk    = document.getElementById("alerta-ok");
+    function mostrarError(msg) {
+      alertaError.textContent = msg;
+      alertaError.classList.add("show");
+      alertaOk.classList.remove("show");
+    }
+    function mostrarOk(msg) {
+      alertaOk.textContent = msg;
+      alertaOk.classList.add("show");
+      alertaError.classList.remove("show");
+    }
+    function ocultarAlertas() {
+      alertaError.classList.remove("show");
+      alertaOk.classList.remove("show");
+    }
+
+    // ── CSV ───────────────────────────────────────────────────────────────────
+    function descargarCSV(filas, nombreArchivo) {
+      const contenido = filas.map(f =>
+        f.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")
+      ).join("\n");
+      const blob = new Blob(["\uFEFF" + contenido], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = nombreArchivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Exportar ──────────────────────────────────────────────────────────────
+    const btnExportar = document.getElementById("btn-exportar");
+
+    btnExportar.addEventListener("click", async () => {
+      ocultarAlertas();
+      document.getElementById("preview-card").classList.remove("show");
+
+      const inicioStr = document.getElementById("fecha-inicio").value;
+      const finStr    = document.getElementById("fecha-fin").value;
+
+      if (!inicioStr || !finStr) {
+        mostrarError("Selecciona ambas fechas antes de exportar.");
+        return;
+      }
+
+      const inicio = new Date(inicioStr); inicio.setHours(0, 0, 0, 0);
+      const fin    = new Date(finStr);    fin.setHours(23, 59, 59, 999);
+
+      if (inicio > fin) {
+        mostrarError("La fecha de inicio no puede ser mayor que la fecha fin.");
+        return;
+      }
+
+      btnExportar.disabled    = true;
+      btnExportar.textContent = "⏳ Procesando...";
+
+      try {
+        let filas = [];
+        let nombreArchivo = "";
+
+        // ──────── VENTAS ────────
+        if (tipoSeleccionado === "ventas") {
+          const snap = await getDocs(query(
+            collection(db, "ventas"),
+            where("creadoEn", ">=", inicio),
+            where("creadoEn", "<=", fin),
+            orderBy("creadoEn", "asc")
+          ));
+
+          filas.push(["Fecha", "Usuario", "Producto", "Cantidad", "Precio unitario", "Subtotal item", "Total venta", "Método de pago", "Nota"]);
+          snap.forEach(d => {
+            const v = d.data();
+            const items = v.items || [];
+            if (items.length === 0) {
+              filas.push([
+                formatearFecha(v.creadoEn), v.usuarioNombre,
+                "", "", "", "",
+                v.total ?? 0, v.metodoPago, v.nota
+              ]);
+            } else {
+              items.forEach((it, i) => {
+                filas.push([
+                  i === 0 ? formatearFecha(v.creadoEn) : "",
+                  i === 0 ? v.usuarioNombre : "",
+                  it.nombre, it.cantidad ?? 0,
+                  it.precioUnitario ?? 0,
+                  it.subtotal ?? 0,
+                  i === 0 ? (v.total ?? 0) : "",
+                  i === 0 ? v.metodoPago : "",
+                  i === 0 ? (v.nota || "") : ""
+                ]);
+              });
+            }
+          });
+          nombreArchivo = `contecs-ventas-${inicioStr}-al-${finStr}.csv`;
+        }
+
+        // ──────── COMPRAS ────────
+        else if (tipoSeleccionado === "compras") {
+          const snap = await getDocs(query(
+            collection(db, "compras"),
+            where("creadoEn", ">=", inicio),
+            where("creadoEn", "<=", fin),
+            orderBy("creadoEn", "asc")
+          ));
+
+          filas.push(["Fecha", "Usuario", "Proveedor", "Producto", "Cantidad", "Precio unitario", "Subtotal item", "Total compra", "Método de pago", "Nota", "URL Factura"]);
+          snap.forEach(d => {
+            const c = d.data();
+            const items = c.items || [];
+            const facturaUrl = c.factura?.url || "";
+            if (items.length === 0) {
+              filas.push([
+                formatearFecha(c.creadoEn), c.usuarioNombre, c.proveedor,
+                "", "", "", "",
+                c.total ?? 0, c.metodoPago, c.nota, facturaUrl
+              ]);
+            } else {
+              items.forEach((it, i) => {
+                filas.push([
+                  i === 0 ? formatearFecha(c.creadoEn) : "",
+                  i === 0 ? c.usuarioNombre : "",
+                  i === 0 ? c.proveedor : "",
+                  it.nombre, it.cantidad ?? 0,
+                  it.precioUnitario ?? 0,
+                  it.subtotal ?? 0,
+                  i === 0 ? (c.total ?? 0) : "",
+                  i === 0 ? c.metodoPago : "",
+                  i === 0 ? (c.nota || "") : "",
+                  i === 0 ? facturaUrl : ""
+                ]);
+              });
+            }
+          });
+          nombreArchivo = `contecs-compras-${inicioStr}-al-${finStr}.csv`;
+        }
+
+        // ──────── FONDOS ────────
+        else if (tipoSeleccionado === "fondos") {
+          const snap = await getDocs(query(
+            collection(db, "fondos_entrada"),
+            where("creadoEn", ">=", inicio),
+            where("creadoEn", "<=", fin),
+            orderBy("creadoEn", "asc")
+          ));
+
+          filas.push(["Fecha", "Tipo", "Origen", "Título", "Descripción", "Monto", "Usuario"]);
+          snap.forEach(d => {
+            const f = d.data();
+            filas.push([
+              formatearFecha(f.creadoEn),
+              f.tipo, f.origen, f.titulo,
+              f.descripcion, f.monto ?? 0,
+              f.usuarioNombre
+            ]);
+          });
+          nombreArchivo = `contecs-fondos-${inicioStr}-al-${finStr}.csv`;
+        }
+
+        // ──────── INVENTARIO ────────
+        else if (tipoSeleccionado === "inventario") {
+          const snap = await getDocs(query(
+            collection(db, "movimientos_inventario"),
+            where("creadoEn", ">=", inicio),
+            where("creadoEn", "<=", fin),
+            orderBy("creadoEn", "asc")
+          ));
+
+          filas.push(["Fecha", "Tipo", "Producto", "Cantidad", "Stock anterior", "Stock posterior", "Origen", "Motivo", "Usuario"]);
+          snap.forEach(d => {
+            const m = d.data();
+            filas.push([
+              formatearFecha(m.creadoEn),
+              m.tipo, m.nombre,
+              m.cantidad ?? 0,
+              m.antes ?? "", m.despues ?? "",
+              m.origen, m.motivo,
+              m.usuarioId
+            ]);
+          });
+          nombreArchivo = `contecs-inventario-${inicioStr}-al-${finStr}.csv`;
+        }
+
+        const numFilas = filas.length - 1; // sin cabecera
+        if (numFilas === 0) {
+          mostrarError("No hay datos en el período seleccionado para exportar.");
+          return;
+        }
+
+        descargarCSV(filas, nombreArchivo);
+
+        // Preview
+        document.getElementById("preview-nombre").textContent = nombreArchivo;
+        document.getElementById("preview-filas").textContent  = numFilas;
+        document.getElementById("preview-card").classList.add("show");
+        mostrarOk(`✅ CSV generado con ${numFilas} registro${numFilas > 1 ? "s" : ""}. Revisa tus descargas.`);
+
+      } catch (err) {
+        console.error("Exportar:", err);
+        mostrarError("Error al exportar: " + err.message);
+      } finally {
+        btnExportar.disabled    = false;
+        btnExportar.textContent = "⬇️ Exportar CSV";
+      }
+    });
   </script>
 </body>
 </html>

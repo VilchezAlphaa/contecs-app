@@ -3,22 +3,516 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CONTECS — Bitácora</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <style>
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--gris-borde);
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gris-medio);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn.activo { color: var(--verde); border-bottom-color: var(--verde); }
+
+    /* ── CARDS COLAPSABLES ── */
+    .bita-card {
+      background: #fff;
+      border-radius: var(--radio);
+      box-shadow: var(--sombra-sm);
+      margin-bottom: 10px;
+      border-left: 3px solid var(--verde-claro);
+      overflow: hidden;
+      animation: fadeScaleIn 0.3s var(--ease-out) both;
+    }
+    .bita-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      gap: 8px;
+      user-select: none;
+    }
+    .bita-header:hover { background: var(--gris-suave); }
+    .bita-meta { flex: 1; min-width: 0; }
+    .bita-fecha { font-size: 12px; color: var(--gris-medio); margin-bottom: 2px; }
+    .bita-usuario { font-size: 13px; font-weight: 600; color: var(--gris-texto); }
+    .bita-total {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--verde);
+      white-space: nowrap;
+    }
+    .bita-metodo {
+      font-size: 11px;
+      background: var(--verde-fondo);
+      color: var(--verde-oscuro);
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .bita-chevron {
+      font-size: 12px;
+      color: var(--gris-medio);
+      transition: transform 0.25s;
+    }
+    .bita-card.abierto .bita-chevron { transform: rotate(180deg); }
+
+    .bita-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--gris-borde);
+    }
+    .bita-card.abierto .bita-body { display: block; }
+
+    .items-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .items-tabla th {
+      text-align: left;
+      color: var(--gris-medio);
+      font-weight: 600;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--gris-borde);
+    }
+    .items-tabla td {
+      padding: 7px 8px;
+      border-bottom: 1px solid #f0f4f1;
+      color: var(--gris-texto);
+    }
+    .items-tabla tr:last-child td { border-bottom: none; }
+    .items-tabla .num { text-align: right; }
+    .factura-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--verde);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--radio-sm);
+      background: var(--verde-fondo);
+      border: 1px solid var(--verde-claro);
+    }
+    .factura-link:hover { background: #d0ecd8; }
+
+    /* ── LISTA SIMPLE (fondos e inventario) ── */
+    .mov-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: var(--radio);
+      box-shadow: var(--sombra-sm);
+      margin-bottom: 8px;
+      animation: fadeScaleIn 0.3s var(--ease-out) both;
+    }
+    .mov-icono {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .mov-icono.entrada { background: var(--verde-fondo); }
+    .mov-icono.salida  { background: var(--rojo-fondo);  }
+    .mov-info { flex: 1; min-width: 0; }
+    .mov-titulo { font-size: 14px; font-weight: 600; color: var(--gris-texto); }
+    .mov-detalle { font-size: 12px; color: var(--gris-medio); margin-top: 2px; }
+    .mov-monto {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .mov-monto.ingreso { color: var(--verde); }
+    .mov-monto.egreso  { color: var(--rojo);  }
+
+    /* ── STOCK BADGE ── */
+    .stock-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .stock-badge.entrada { background: var(--verde-fondo); color: var(--verde-oscuro); }
+    .stock-badge.salida  { background: var(--rojo-fondo);  color: var(--rojo); }
+
+    /* ── SPINNER SECCION ── */
+    .tab-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+  </style>
 </head>
 <body>
   <div class="topbar">
-    <h1>CONTECS</h1>
+    <h1>📋 Bitácora</h1>
     <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
   </div>
+
   <div class="container">
-    <div class="card">
-      <div class="card-title">Módulo en construcción</div>
-      <p style="color:#888;font-size:14px;">Próximamente disponible.</p>
+    <div class="seccion-titulo">Historial de operaciones</div>
+
+    <div class="tabs">
+      <button class="tab-btn activo" data-tab="ventas">🧾 Ventas</button>
+      <button class="tab-btn" data-tab="compras">🛒 Compras</button>
+      <button class="tab-btn" data-tab="fondos">💳 Fondos</button>
+      <button class="tab-btn" data-tab="inventario">📦 Inventario</button>
+    </div>
+
+    <div id="tab-ventas">
+      <div class="tab-spinner"><div class="spinner"></div></div>
+    </div>
+    <div id="tab-compras"    style="display:none">
+      <div class="tab-spinner"><div class="spinner"></div></div>
+    </div>
+    <div id="tab-fondos"     style="display:none">
+      <div class="tab-spinner"><div class="spinner"></div></div>
+    </div>
+    <div id="tab-inventario" style="display:none">
+      <div class="tab-spinner"><div class="spinner"></div></div>
     </div>
   </div>
+
   <script type="module">
-    import { guardRoute } from "./js/auth.js";
+    import { guardRoute, requirePermiso } from "./js/auth.js";
+    import { formatearMoneda } from "./js/operaciones.js";
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, orderBy, limit, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
     guardRoute();
+    requirePermiso("ver_bitacora");
+
+    // ── Helper fecha ──────────────────────────────────────────────────────────
+    function formatearFecha(ts) {
+      if (!ts) return "—";
+      const f = ts.toDate ? ts.toDate() : new Date(ts);
+      return f.toLocaleDateString("es-PA", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    // ── Colapsar / expandir ───────────────────────────────────────────────────
+    function toggleCard(card) {
+      card.classList.toggle("abierto");
+    }
+
+    // ── TABS ─────────────────────────────────────────────────────────────────
+    const TABS = ["ventas", "compras", "fondos", "inventario"];
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabBtns.forEach(b => b.classList.remove("activo"));
+        btn.classList.add("activo");
+        TABS.forEach(t => {
+          document.getElementById("tab-" + t).style.display =
+            t === btn.dataset.tab ? "" : "none";
+        });
+      });
+    });
+
+    // ── Unsubs para limpiar listeners si fuera necesario ─────────────────────
+    const unsubs = {};
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB VENTAS
+    // ════════════════════════════════════════════════════════════════════════
+    const contenedorVentas = document.getElementById("tab-ventas");
+
+    unsubs.ventas = onSnapshot(
+      query(collection(db, "ventas"), orderBy("creadoEn", "desc"), limit(50)),
+      (snap) => {
+        if (snap.empty) {
+          contenedorVentas.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji">🧾</div>
+              <p>No hay ventas registradas aún.</p>
+            </div>`;
+          return;
+        }
+        contenedorVentas.innerHTML = "";
+        snap.forEach((docSnap, idx) => {
+          const v = docSnap.data();
+          const card = document.createElement("div");
+          card.className = "bita-card";
+          card.style.animationDelay = `${idx * 0.04}s`;
+
+          const metodoTexto = v.metodoPago === "transferencia" ? "💳 Transferencia" : "💵 Efectivo";
+          const itemsHTML = (v.items || []).map(it => `
+            <tr>
+              <td>${it.nombre || "—"}</td>
+              <td class="num">${it.cantidad ?? 0}</td>
+              <td class="num">${formatearMoneda(it.precioUnitario ?? 0)}</td>
+              <td class="num">${formatearMoneda(it.subtotal ?? 0)}</td>
+            </tr>`).join("");
+
+          const notaHTML = v.nota
+            ? `<p style="margin-top:8px;font-size:12px;color:var(--gris-medio);">📝 ${v.nota}</p>`
+            : "";
+
+          card.innerHTML = `
+            <div class="bita-header">
+              <div class="bita-meta">
+                <div class="bita-fecha">${formatearFecha(v.creadoEn)}</div>
+                <div class="bita-usuario">👤 ${v.usuarioNombre || "—"}</div>
+              </div>
+              <span class="bita-total">${formatearMoneda(v.total ?? 0)}</span>
+              <span class="bita-metodo">${metodoTexto}</span>
+              <span class="bita-chevron">▼</span>
+            </div>
+            <div class="bita-body">
+              <table class="items-tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="num">Cant.</th>
+                    <th class="num">P/U</th>
+                    <th class="num">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsHTML}</tbody>
+              </table>
+              ${notaHTML}
+            </div>`;
+
+          card.querySelector(".bita-header").addEventListener("click", () => toggleCard(card));
+          contenedorVentas.appendChild(card);
+        });
+      },
+      (err) => {
+        console.error("Bitácora ventas:", err);
+        contenedorVentas.innerHTML = `
+          <div class="alerta alerta-error show">
+            ⚠️ Error al cargar ventas. ${err.message}
+          </div>`;
+      }
+    );
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB COMPRAS
+    // ════════════════════════════════════════════════════════════════════════
+    const contenedorCompras = document.getElementById("tab-compras");
+
+    unsubs.compras = onSnapshot(
+      query(collection(db, "compras"), orderBy("creadoEn", "desc"), limit(50)),
+      (snap) => {
+        if (snap.empty) {
+          contenedorCompras.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji">🛒</div>
+              <p>No hay compras registradas aún.</p>
+            </div>`;
+          return;
+        }
+        contenedorCompras.innerHTML = "";
+        snap.forEach((docSnap, idx) => {
+          const c = docSnap.data();
+          const card = document.createElement("div");
+          card.className = "bita-card";
+          card.style.animationDelay = `${idx * 0.04}s`;
+
+          const metodoTexto = c.metodoPago === "transferencia" ? "💳 Transferencia" : "💵 Efectivo";
+          const itemsHTML = (c.items || []).map(it => `
+            <tr>
+              <td>${it.nombre || "—"}</td>
+              <td class="num">${it.cantidad ?? 0}</td>
+              <td class="num">${formatearMoneda(it.precioUnitario ?? 0)}</td>
+              <td class="num">${formatearMoneda(it.subtotal ?? 0)}</td>
+            </tr>`).join("");
+
+          const facturaHTML = c.factura?.url
+            ? `<a href="${c.factura.url}" target="_blank" rel="noopener" class="factura-link">
+                🧾 Ver factura: ${c.factura.name || "factura"}
+               </a>`
+            : "";
+
+          const notaHTML = c.nota
+            ? `<p style="margin-top:8px;font-size:12px;color:var(--gris-medio);">📝 ${c.nota}</p>`
+            : "";
+
+          card.innerHTML = `
+            <div class="bita-header">
+              <div class="bita-meta">
+                <div class="bita-fecha">${formatearFecha(c.creadoEn)}</div>
+                <div class="bita-usuario">🏪 ${c.proveedor || "Sin proveedor"} &mdash; 👤 ${c.usuarioNombre || "—"}</div>
+              </div>
+              <span class="bita-total">${formatearMoneda(c.total ?? 0)}</span>
+              <span class="bita-metodo">${metodoTexto}</span>
+              <span class="bita-chevron">▼</span>
+            </div>
+            <div class="bita-body">
+              <table class="items-tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="num">Cant.</th>
+                    <th class="num">P/U</th>
+                    <th class="num">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsHTML}</tbody>
+              </table>
+              ${notaHTML}
+              ${facturaHTML}
+            </div>`;
+
+          card.querySelector(".bita-header").addEventListener("click", () => toggleCard(card));
+          contenedorCompras.appendChild(card);
+        });
+      },
+      (err) => {
+        console.error("Bitácora compras:", err);
+        contenedorCompras.innerHTML = `
+          <div class="alerta alerta-error show">
+            ⚠️ Error al cargar compras. ${err.message}
+          </div>`;
+      }
+    );
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB FONDOS
+    // ════════════════════════════════════════════════════════════════════════
+    const contenedorFondos = document.getElementById("tab-fondos");
+
+    unsubs.fondos = onSnapshot(
+      query(collection(db, "fondos_entrada"), orderBy("creadoEn", "desc"), limit(50)),
+      (snap) => {
+        if (snap.empty) {
+          contenedorFondos.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji">💳</div>
+              <p>No hay movimientos de fondos aún.</p>
+            </div>`;
+          return;
+        }
+        contenedorFondos.innerHTML = "";
+        snap.forEach((docSnap, idx) => {
+          const f = docSnap.data();
+          const esIngreso = f.tipo === "ingreso";
+          const item = document.createElement("div");
+          item.className = "mov-item";
+          item.style.animationDelay = `${idx * 0.04}s`;
+
+          const origenTexto = {
+            venta: "Venta",
+            compra: "Compra",
+            manual: "Manual"
+          }[f.origen] || f.origen || "—";
+
+          item.innerHTML = `
+            <div class="mov-icono ${esIngreso ? "entrada" : "salida"}">
+              ${esIngreso ? "▲" : "▼"}
+            </div>
+            <div class="mov-info">
+              <div class="mov-titulo">${f.titulo || "—"}</div>
+              <div class="mov-detalle">
+                ${origenTexto} · ${f.usuarioNombre || "—"} · ${formatearFecha(f.creadoEn)}
+              </div>
+              ${f.descripcion ? `<div class="mov-detalle" style="margin-top:2px;">📝 ${f.descripcion}</div>` : ""}
+            </div>
+            <div class="mov-monto ${esIngreso ? "ingreso" : "egreso"}">
+              ${esIngreso ? "+" : "−"}${formatearMoneda(f.monto ?? 0)}
+            </div>`;
+
+          contenedorFondos.appendChild(item);
+        });
+      },
+      (err) => {
+        console.error("Bitácora fondos:", err);
+        contenedorFondos.innerHTML = `
+          <div class="alerta alerta-error show">
+            ⚠️ Error al cargar fondos. ${err.message}
+          </div>`;
+      }
+    );
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB INVENTARIO
+    // ════════════════════════════════════════════════════════════════════════
+    const contenedorInventario = document.getElementById("tab-inventario");
+
+    unsubs.inventario = onSnapshot(
+      query(collection(db, "movimientos_inventario"), orderBy("creadoEn", "desc"), limit(50)),
+      (snap) => {
+        if (snap.empty) {
+          contenedorInventario.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji">📦</div>
+              <p>No hay movimientos de inventario aún.</p>
+            </div>`;
+          return;
+        }
+        contenedorInventario.innerHTML = "";
+        snap.forEach((docSnap, idx) => {
+          const m = docSnap.data();
+          const esEntrada = m.tipo === "entrada";
+          const item = document.createElement("div");
+          item.className = "mov-item";
+          item.style.animationDelay = `${idx * 0.04}s`;
+
+          const origenTexto = {
+            venta: "Venta",
+            compra: "Compra",
+            ajuste: "Ajuste"
+          }[m.origen] || m.origen || "—";
+
+          item.innerHTML = `
+            <div class="mov-icono ${esEntrada ? "entrada" : "salida"}">
+              ${esEntrada ? "📥" : "📤"}
+            </div>
+            <div class="mov-info">
+              <div class="mov-titulo">
+                ${m.nombre || "—"}
+                <span class="stock-badge ${esEntrada ? "entrada" : "salida"}">
+                  ${esEntrada ? "+" : "−"}${m.cantidad ?? 0}
+                </span>
+              </div>
+              <div class="mov-detalle">
+                ${m.antes ?? "?"} → ${m.despues ?? "?"} unidades · ${origenTexto} · ${formatearFecha(m.creadoEn)}
+              </div>
+              ${m.motivo ? `<div class="mov-detalle" style="margin-top:2px;">📝 ${m.motivo}</div>` : ""}
+            </div>`;
+
+          contenedorInventario.appendChild(item);
+        });
+      },
+      (err) => {
+        console.error("Bitácora inventario:", err);
+        contenedorInventario.innerHTML = `
+          <div class="alerta alerta-error show">
+            ⚠️ Error al cargar inventario. ${err.message}
+          </div>`;
+      }
+    );
   </script>
 </body>
 </html>

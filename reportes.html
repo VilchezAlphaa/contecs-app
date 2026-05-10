@@ -5,25 +5,331 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CONTECS — Reportes</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <style>
+    /* ── FILTRO DE FECHAS ── */
+    .filtro-card {
+      background: #fff;
+      border-radius: var(--radio);
+      box-shadow: var(--sombra-sm);
+      padding: 18px 16px;
+      margin-bottom: 20px;
+      border-left: 3px solid var(--verde-claro);
+    }
+    .filtro-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .filtro-row .form-group { margin-bottom: 0; }
+
+    /* ── RESULTADO CARDS ── */
+    .reporte-seccion {
+      margin-bottom: 24px;
+    }
+    .reporte-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .reporte-stat {
+      background: #fff;
+      border-radius: var(--radio);
+      box-shadow: var(--sombra-sm);
+      padding: 16px;
+      border-left: 3px solid var(--verde-claro);
+      animation: fadeScaleIn 0.35s var(--ease-spring) both;
+    }
+    .reporte-stat:nth-child(1) { animation-delay: 0.05s; }
+    .reporte-stat:nth-child(2) { animation-delay: 0.10s; }
+    .reporte-stat:nth-child(3) { animation-delay: 0.15s; }
+    .reporte-stat.full {
+      grid-column: 1 / -1;
+    }
+    .reporte-stat.balance-positivo { border-left-color: var(--verde); }
+    .reporte-stat.balance-negativo { border-left-color: var(--rojo); }
+    .reporte-label { font-size: 12px; color: var(--gris-medio); margin-bottom: 4px; }
+    .reporte-valor {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--verde);
+      word-break: break-word;
+    }
+    .reporte-valor.negativo { color: var(--rojo); }
+    .reporte-valor.neutro   { color: var(--gris-texto); }
+    .reporte-valor.sm       { font-size: 16px; }
+
+    /* ── ESTADO VACIO ── */
+    .resultado-vacio {
+      text-align: center;
+      padding: 24px;
+      color: var(--gris-medio);
+      font-size: 14px;
+    }
+
+    /* ── SECCIÓN TITULO inline ── */
+    .sub-titulo {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gris-texto);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sub-titulo .emoji { font-size: 18px; }
+  </style>
 </head>
 <body>
   <div class="topbar">
-    <h1>Reportes</h1>
+    <h1>📈 Reportes</h1>
     <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
   </div>
+
   <div class="container">
-    <div class="card" style="text-align:center;padding:40px 20px;">
-      <div style="font-size:48px;margin-bottom:12px;">📈</div>
-      <div class="card-title" style="justify-content:center;">Módulo en construcción</div>
-      <p style="color:var(--gris-medio);font-size:14px;">
-        Este módulo estará disponible en la Fase 7.<br>
-        Aquí verás reportes de ventas, estadísticas por período y el producto estrella de cada evento.
-      </p>
+    <!-- Filtro de fechas -->
+    <div class="filtro-card">
+      <div class="seccion-titulo" style="margin-bottom:14px;">Seleccionar período</div>
+      <div class="filtro-row">
+        <div class="form-group">
+          <label for="fecha-inicio">Fecha inicio</label>
+          <input type="date" id="fecha-inicio"/>
+        </div>
+        <div class="form-group">
+          <label for="fecha-fin">Fecha fin</label>
+          <input type="date" id="fecha-fin"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-reporte" style="width:100%;">
+        📊 Ver reporte
+      </button>
+      <div class="alerta alerta-error" id="alerta-error"></div>
     </div>
+
+    <div id="resultados"></div>
   </div>
+
   <script type="module">
-    import { guardRoute } from "./js/auth.js";
+    import { guardRoute, requirePermiso } from "./js/auth.js";
+    import { formatearMoneda } from "./js/operaciones.js";
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, where, orderBy, getDocs
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
     guardRoute();
+    requirePermiso("ver_reportes");
+
+    // ── Helper fecha ──────────────────────────────────────────────────────────
+    function formatearFecha(ts) {
+      if (!ts) return "—";
+      const f = ts.toDate ? ts.toDate() : new Date(ts);
+      return f.toLocaleDateString("es-PA", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    // ── Defaults: mes actual ──────────────────────────────────────────────────
+    const hoy = new Date();
+    const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+    function toInputDate(d) {
+      return d.toISOString().split("T")[0];
+    }
+
+    document.getElementById("fecha-inicio").value = toInputDate(primerDia);
+    document.getElementById("fecha-fin").value     = toInputDate(ultimoDia);
+
+    // ── Alerta ────────────────────────────────────────────────────────────────
+    const alertaEl = document.getElementById("alerta-error");
+    function mostrarError(msg) {
+      alertaEl.textContent = msg;
+      alertaEl.classList.add("show");
+    }
+    function ocultarError() {
+      alertaEl.classList.remove("show");
+    }
+
+    // ── Generar reporte ───────────────────────────────────────────────────────
+    const btnReporte   = document.getElementById("btn-reporte");
+    const resultadosEl = document.getElementById("resultados");
+
+    btnReporte.addEventListener("click", async () => {
+      ocultarError();
+      const inicioStr = document.getElementById("fecha-inicio").value;
+      const finStr    = document.getElementById("fecha-fin").value;
+
+      if (!inicioStr || !finStr) {
+        mostrarError("Selecciona ambas fechas.");
+        return;
+      }
+
+      const inicio = new Date(inicioStr); inicio.setHours(0, 0, 0, 0);
+      const fin    = new Date(finStr);    fin.setHours(23, 59, 59, 999);
+
+      if (inicio > fin) {
+        mostrarError("La fecha de inicio no puede ser mayor que la fecha fin.");
+        return;
+      }
+
+      btnReporte.disabled = true;
+      btnReporte.textContent = "⏳ Procesando...";
+      resultadosEl.innerHTML = `<div style="display:flex;justify-content:center;padding:40px;"><div class="spinner"></div></div>`;
+
+      try {
+        // ── Query ventas ──
+        const snapVentas = await getDocs(query(
+          collection(db, "ventas"),
+          where("creadoEn", ">=", inicio),
+          where("creadoEn", "<=", fin),
+          orderBy("creadoEn", "asc")
+        ));
+
+        let totalVentas = 0;
+        const conteoProductos = {};
+        snapVentas.forEach(d => {
+          const v = d.data();
+          totalVentas += v.total ?? 0;
+          (v.items || []).forEach(it => {
+            conteoProductos[it.nombre] = (conteoProductos[it.nombre] ?? 0) + (it.cantidad ?? 0);
+          });
+        });
+        const numVentas = snapVentas.size;
+        const productoEstrella = numVentas > 0
+          ? Object.entries(conteoProductos).sort((a, b) => b[1] - a[1])[0]
+          : null;
+
+        // ── Query compras ──
+        const snapCompras = await getDocs(query(
+          collection(db, "compras"),
+          where("creadoEn", ">=", inicio),
+          where("creadoEn", "<=", fin),
+          orderBy("creadoEn", "asc")
+        ));
+
+        let totalCompras = 0;
+        const conteoProveedores = {};
+        snapCompras.forEach(d => {
+          const c = d.data();
+          totalCompras += c.total ?? 0;
+          const prov = c.proveedor || "Sin proveedor";
+          conteoProveedores[prov] = (conteoProveedores[prov] ?? 0) + 1;
+        });
+        const numCompras = snapCompras.size;
+        const proveedorTop = numCompras > 0
+          ? Object.entries(conteoProveedores).sort((a, b) => b[1] - a[1])[0]
+          : null;
+
+        // ── Query fondos ──
+        const snapFondos = await getDocs(query(
+          collection(db, "fondos_entrada"),
+          where("creadoEn", ">=", inicio),
+          where("creadoEn", "<=", fin),
+          orderBy("creadoEn", "asc")
+        ));
+
+        let totalIngresos = 0;
+        let totalEgresos  = 0;
+        snapFondos.forEach(d => {
+          const f = d.data();
+          if (f.tipo === "ingreso") totalIngresos += f.monto ?? 0;
+          else                      totalEgresos  += f.monto ?? 0;
+        });
+        const balanceNeto = totalIngresos - totalEgresos;
+
+        // ── Render ────────────────────────────────────────────────────────────
+        const periodoLabel = `${new Date(inicioStr).toLocaleDateString("es-PA", { day:"2-digit", month:"short", year:"numeric" })} → ${new Date(finStr).toLocaleDateString("es-PA", { day:"2-digit", month:"short", year:"numeric" })}`;
+
+        resultadosEl.innerHTML = `
+          <!-- ── VENTAS ── -->
+          <div class="reporte-seccion">
+            <div class="sub-titulo"><span class="emoji">🧾</span> Ventas del período</div>
+            <div style="font-size:12px;color:var(--gris-medio);margin-bottom:8px;">📅 ${periodoLabel}</div>
+            ${numVentas === 0 ? `
+              <div class="resultado-vacio">Sin ventas en este período.</div>
+            ` : `
+              <div class="reporte-grid">
+                <div class="reporte-stat">
+                  <div class="reporte-label">💰 Total vendido</div>
+                  <div class="reporte-valor">${formatearMoneda(totalVentas)}</div>
+                </div>
+                <div class="reporte-stat">
+                  <div class="reporte-label">📊 Número de ventas</div>
+                  <div class="reporte-valor">${numVentas}</div>
+                </div>
+                ${productoEstrella ? `
+                <div class="reporte-stat full">
+                  <div class="reporte-label">⭐ Producto más vendido</div>
+                  <div class="reporte-valor sm">${productoEstrella[0]}</div>
+                  <div style="font-size:12px;color:var(--gris-medio);margin-top:3px;">${productoEstrella[1]} unidades vendidas</div>
+                </div>` : ""}
+              </div>
+            `}
+          </div>
+
+          <!-- ── COMPRAS ── -->
+          <div class="reporte-seccion">
+            <div class="sub-titulo"><span class="emoji">🛒</span> Compras del período</div>
+            ${numCompras === 0 ? `
+              <div class="resultado-vacio">Sin compras en este período.</div>
+            ` : `
+              <div class="reporte-grid">
+                <div class="reporte-stat">
+                  <div class="reporte-label">💸 Total comprado</div>
+                  <div class="reporte-valor negativo">${formatearMoneda(totalCompras)}</div>
+                </div>
+                <div class="reporte-stat">
+                  <div class="reporte-label">🧾 Número de compras</div>
+                  <div class="reporte-valor">${numCompras}</div>
+                </div>
+                ${proveedorTop ? `
+                <div class="reporte-stat full">
+                  <div class="reporte-label">🏪 Proveedor más frecuente</div>
+                  <div class="reporte-valor sm">${proveedorTop[0]}</div>
+                  <div style="font-size:12px;color:var(--gris-medio);margin-top:3px;">${proveedorTop[1]} compra${proveedorTop[1] > 1 ? "s" : ""} realizadas</div>
+                </div>` : ""}
+              </div>
+            `}
+          </div>
+
+          <!-- ── FONDOS ── -->
+          <div class="reporte-seccion">
+            <div class="sub-titulo"><span class="emoji">💳</span> Movimientos de fondos</div>
+            ${snapFondos.empty ? `
+              <div class="resultado-vacio">Sin movimientos de fondos en este período.</div>
+            ` : `
+              <div class="reporte-grid">
+                <div class="reporte-stat">
+                  <div class="reporte-label">📈 Total ingresos</div>
+                  <div class="reporte-valor">${formatearMoneda(totalIngresos)}</div>
+                </div>
+                <div class="reporte-stat">
+                  <div class="reporte-label">📉 Total egresos</div>
+                  <div class="reporte-valor negativo">${formatearMoneda(totalEgresos)}</div>
+                </div>
+                <div class="reporte-stat full ${balanceNeto >= 0 ? "balance-positivo" : "balance-negativo"}">
+                  <div class="reporte-label">⚖️ Balance neto del período</div>
+                  <div class="reporte-valor ${balanceNeto < 0 ? "negativo" : ""}">
+                    ${balanceNeto >= 0 ? "+" : ""}${formatearMoneda(balanceNeto)}
+                  </div>
+                </div>
+              </div>
+            `}
+          </div>
+        `;
+
+      } catch (err) {
+        console.error("Reportes:", err);
+        mostrarError("Error al generar el reporte: " + err.message);
+        resultadosEl.innerHTML = "";
+      } finally {
+        btnReporte.disabled = false;
+        btnReporte.textContent = "📊 Ver reporte";
+      }
+    });
   </script>
 </body>
 </html>
