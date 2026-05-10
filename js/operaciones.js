@@ -109,6 +109,12 @@ function limpiarNombreArchivo(nombre) {
     .replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
+function descripcionErrorStorage(error, ruta, bucket) {
+  const codigo = error?.code || "desconocido";
+  const mensaje = error?.message || String(error || "Error desconocido");
+  return `No se pudo subir la factura a ${bucket}/${ruta} (${codigo}). ${mensaje}`;
+}
+
 function esperarAuthListo() {
   if (auth.currentUser) {
     return Promise.resolve(auth.currentUser);
@@ -168,10 +174,10 @@ export async function subirFacturaAStorage({ compraId, factura, usuarioId }) {
     };
   } catch (error) {
     if (error?.code === "storage/unauthorized") {
-      throw new Error("Firebase Storage rechazó la subida. Revisa las reglas para permitir escritura autenticada en compras/{compraId}/facturas/**.");
+      throw new Error(descripcionErrorStorage(error, ruta, storage.app.options.storageBucket || "storageBucket-desconocido"));
     }
 
-    throw error;
+    throw new Error(descripcionErrorStorage(error, ruta, storage.app.options.storageBucket || "storageBucket-desconocido"));
   }
 }
 
