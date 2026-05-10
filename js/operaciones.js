@@ -463,6 +463,69 @@ export async function ajustarStock({ usuarioId, productoId, cantidad, tipo, moti
   });
 }
 
+// ── MERMA ─────────────────────────────────────────────────────────────────────
+// Descuenta stock de cada producto y registra en movimientos_inventario
+// y en bitácora como merma. NO mueve fondos.
+export async function registrarMerma({ usuarioId, usuarioNombre = "", items, motivo = "" }) {
+  if (!usuarioId) throw new Error("No se pudo identificar al usuario.");
+  if (!Array.isArray(items) || items.length === 0) throw new Error("Agrega al menos un producto.");
+  if (!motivo.trim()) throw new Error("El motivo de la merma es requerido.");
+
+  return runTransaction(db, async (tx) => {
+    // Leer y validar stock de todos los productos
+    const refs   = items.map(it => doc(db, "productos", it.productoId));
+    const snaps  = await Promise.all(refs.map(r => tx.get(r)));
+
+    snaps.forEach((snap, i) => {
+      if (!snap.exists()) throw new Error(`Producto ${items[i].nombre} no existe.`);
+      const stockActual = Number(snap.data().stock || 0);
+      if (stockActual < items[i].cantidad) {
+        throw new Error(`Stock insuficiente para ${items[i].nombre} (disponible: ${stockActual}).`);
+      }
+    });
+
+    const mermaRef = doc(collection(db, "mermas"));
+
+    // Documento principal de merma (para bitácora)
+    tx.set(mermaRef, {
+      usuarioId,
+      usuarioNombre,
+      items: items.map(it => ({
+        productoId:    it.productoId,
+        nombre:        it.nombre,
+        cantidad:      it.cantidad,
+      })),
+      motivo: motivo.trim(),
+      creadoEn: serverTimestamp(),
+    });
+
+    // Descontar stock y crear movimiento por ítem
+    snaps.forEach((snap, i) => {
+      const it          = items[i];
+      const stockActual = Number(snap.data().stock || 0);
+      const nuevoStock  = stockActual - it.cantidad;
+      const movRef      = doc(collection(db, "movimientos_inventario"));
+
+      tx.update(refs[i], { stock: nuevoStock, actualizadoEn: serverTimestamp() });
+      tx.set(movRef, {
+        tipo:         "salida",
+        origen:       "merma",
+        productoId:   it.productoId,
+        nombre:       it.nombre,
+        cantidad:     it.cantidad,
+        antes:        stockActual,
+        despues:      nuevoStock,
+        motivo:       motivo.trim(),
+        referenciaId: mermaRef.id,
+        usuarioId,
+        creadoEn:     serverTimestamp(),
+      });
+    });
+
+    return { id: mermaRef.id };
+  });
+}
+
 export async function registrarMovimientoFondo({ usuarioId, usuarioNombre = "", tipo, monto, descripcion = "", referenciaId = null, titulo = "Movimiento" }) {
   if (!usuarioId) throw new Error("No se pudo identificar al usuario.");
   const montoNormalizado = aNumero(monto, 0);

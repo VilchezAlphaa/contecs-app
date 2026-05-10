@@ -184,6 +184,7 @@
       <button class="tab-btn" data-tab="compras">🛒 Compras</button>
       <button class="tab-btn" data-tab="fondos">💳 Fondos</button>
       <button class="tab-btn" data-tab="inventario">📦 Inventario</button>
+      <button class="tab-btn" data-tab="mermas">⚠️ Mermas</button>
     </div>
 
     <div id="tab-ventas">
@@ -196,6 +197,9 @@
       <div class="tab-spinner"><div class="spinner"></div></div>
     </div>
     <div id="tab-inventario" style="display:none">
+      <div class="tab-spinner"><div class="spinner"></div></div>
+    </div>
+    <div id="tab-mermas" style="display:none">
       <div class="tab-spinner"><div class="spinner"></div></div>
     </div>
   </div>
@@ -227,7 +231,7 @@
     }
 
     // ── TABS ─────────────────────────────────────────────────────────────────
-    const TABS = ["ventas", "compras", "fondos", "inventario"];
+    const TABS = ["ventas", "compras", "fondos", "inventario", "mermas"];
     const tabBtns = document.querySelectorAll(".tab-btn");
     tabBtns.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -511,6 +515,66 @@
           <div class="alerta alerta-error show">
             ⚠️ Error al cargar inventario. ${err.message}
           </div>`;
+      }
+    );
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TAB MERMAS
+    // ════════════════════════════════════════════════════════════════════════
+    const contenedorMermas = document.getElementById("tab-mermas");
+
+    unsubs.mermas = onSnapshot(
+      query(collection(db, "mermas"), orderBy("creadoEn", "desc"), limit(50)),
+      (snap) => {
+        if (snap.empty) {
+          contenedorMermas.innerHTML = `
+            <div class="empty-state" style="text-align:center;padding:32px;color:var(--gris-medio);">
+              <div style="font-size:40px;margin-bottom:8px;">⚠️</div>
+              <p>No hay mermas registradas.</p>
+            </div>`;
+          return;
+        }
+        contenedorMermas.innerHTML = "";
+        snap.forEach((docSnap, idx) => {
+          const m    = docSnap.data();
+          const card = document.createElement("div");
+          card.className = "bita-card";
+          card.style.borderLeftColor = "var(--rojo)";
+          card.style.animationDelay = `${idx * 0.04}s`;
+
+          const itemsHTML = (m.items || []).map(it => `
+            <tr>
+              <td>${it.nombre || "—"}</td>
+              <td class="num">${it.cantidad ?? 0}</td>
+            </tr>`).join("");
+
+          card.innerHTML = `
+            <div class="bita-header">
+              <div class="bita-meta">
+                <div class="bita-fecha">${formatearFecha(m.creadoEn)}</div>
+                <div class="bita-usuario">👤 ${m.usuarioNombre || "—"}</div>
+              </div>
+              <span class="bita-metodo" style="background:var(--rojo-fondo);color:var(--rojo);">
+                ⚠️ Merma
+              </span>
+              <span class="bita-chevron">▼</span>
+            </div>
+            <div class="bita-body">
+              <table class="items-tabla">
+                <thead><tr><th>Producto</th><th class="num">Cant.</th></tr></thead>
+                <tbody>${itemsHTML}</tbody>
+              </table>
+              ${m.motivo ? `<p style="margin-top:10px;font-size:13px;color:var(--rojo);">📝 Motivo: ${m.motivo}</p>` : ""}
+            </div>`;
+
+          card.querySelector(".bita-header").addEventListener("click", () => toggleCard(card));
+          contenedorMermas.appendChild(card);
+        });
+      },
+      (err) => {
+        console.error("Bitácora mermas:", err);
+        contenedorMermas.innerHTML = `
+          <div class="alerta alerta-error show">⚠️ Error al cargar mermas. ${err.message}</div>`;
       }
     );
   </script>

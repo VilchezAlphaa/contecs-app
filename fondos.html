@@ -6,21 +6,16 @@
   <title>CONTECS — Fondo</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
-    .fondo-resumen {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .fondo-box {
+    .fondo-balance-box {
       background: #fff;
       border-radius: 14px;
-      padding: 18px;
+      padding: 22px 18px;
       box-shadow: var(--sombra-sm);
       border-left: 3px solid var(--verde-claro);
+      margin-bottom: 8px;
     }
-    .fondo-box .lbl { font-size: 12px; color: var(--gris-medio); margin-bottom: 6px; }
-    .fondo-box .val { font-size: 28px; font-weight: 800; color: var(--verde-oscuro); }
+    .fondo-balance-box .lbl { font-size: 12px; color: var(--gris-medio); margin-bottom: 6px; }
+    .fondo-balance-box .val { font-size: 32px; font-weight: 800; color: var(--verde-oscuro); }
     .fondo-item {
       background: #fff;
       border-radius: 14px;
@@ -33,13 +28,11 @@
       gap: 12px;
     }
     .fondo-titulo { font-weight: 700; color: var(--gris-texto); }
-    .fondo-meta { font-size: 12px; color: var(--gris-medio); }
+    .fondo-meta   { font-size: 12px; color: var(--gris-medio); }
     .fondo-monto.ingreso { color: var(--verde); font-weight: 800; }
-    .fondo-monto.salida { color: var(--rojo); font-weight: 800; }
-    .btn-detalle-fondo { margin-top: 12px; width: auto; }
-    @media (min-width: 680px) {
-      .fondo-resumen { grid-template-columns: 1fr 1fr; }
-    }
+    .fondo-monto.salida  { color: var(--rojo);  font-weight: 800; }
+    .empty-state { text-align:center; padding:24px 16px; color:var(--gris-medio); }
+    .empty-state .emoji { font-size:40px; display:block; margin-bottom:8px; }
   </style>
 </head>
 <body>
@@ -47,51 +40,174 @@
     <h1>Fondo</h1>
     <a href="dashboard.html" class="topbar-link">← Volver</a>
   </div>
+
   <div class="container">
     <div class="alerta alerta-error" id="alerta-fondo"></div>
 
+    <!-- Balance -->
     <div class="card">
       <div class="card-title">Balance actual</div>
-      <div class="fondo-resumen">
-        <div class="fondo-box">
-          <div class="lbl">Saldo del fondo</div>
-          <div class="val" id="fondo-balance">$0.00</div>
-          <a href="detalleFondo.html" class="btn btn-outline btn-sm btn-detalle-fondo">Detalle fondo</a>
-        </div>
-        <div class="fondo-box">
-          <div class="lbl">Estado</div>
-          <div class="val fondo-estado" id="fondo-ultimo">Cargando...</div>
-        </div>
+      <div class="fondo-balance-box">
+        <div class="lbl">Saldo del fondo</div>
+        <div class="val" id="fondo-balance">$0.00</div>
       </div>
+      <a href="detalleFondo.html" class="btn btn-outline btn-sm" style="margin-top:4px;width:auto;">
+        📋 Ver detalle completo
+      </a>
     </div>
 
+    <!-- Registrar movimiento (solo para quienes tienen permiso editar_fondos) -->
     <div class="card" id="bloque-edicion-fondo">
       <div class="card-title">Registrar movimiento</div>
-      <form id="form-movimiento-fondo">
-        <div class="form-group">
-          <label for="tipo-movimiento">Tipo</label>
-          <select id="tipo-movimiento" aria-label="Tipo de movimiento">
-            <option value="ingreso">Ingreso</option>
-            <option value="salida">Salida</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Monto</label>
-          <input type="number" id="monto-movimiento" min="0" step="0.01" placeholder="0.00"/>
-        </div>
-        <div class="form-group">
-          <label>Descripción</label>
-          <textarea id="descripcion-movimiento" rows="3" placeholder="Motivo del movimiento"></textarea>
-        </div>
-        <button class="btn btn-primary" id="btn-guardar-fondo" type="submit">Registrar movimiento</button>
-      </form>
+      <p style="font-size:13px;color:var(--gris-medio);margin-bottom:14px;">
+        Úsalo para donaciones, transferencias manuales u otros movimientos que no vienen de ventas o compras.
+      </p>
+      <div class="form-group">
+        <label for="tipo-movimiento">Tipo</label>
+        <select id="tipo-movimiento">
+          <option value="ingreso">Ingreso</option>
+          <option value="salida">Salida</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Monto</label>
+        <input type="number" id="monto-movimiento" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea id="descripcion-movimiento" rows="2" placeholder="Ej: donación de empresa X, reembolso..."></textarea>
+      </div>
+      <button class="btn btn-primary" id="btn-guardar-fondo">Registrar movimiento</button>
     </div>
 
+    <!-- Historial reciente -->
     <div class="card">
-      <div class="card-title">Historial</div>
-      <div id="historial-fondo"></div>
+      <div class="card-title">Últimos movimientos</div>
+      <div id="historial-fondo">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+      </div>
     </div>
   </div>
-  <script type="module" src="./js/fondo.js"></script>
+
+  <script type="module">
+    import { guardRoute, requirePermiso, usuarioTienePermiso, getUsuarioActual } from "./js/auth.js";
+    import { db, auth } from "./js/firebase-config.js";
+    import { formatearMoneda, registrarMovimientoFondo } from "./js/operaciones.js";
+    import {
+      doc, getDoc, collection, query, orderBy, limit, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    guardRoute();
+    requirePermiso("ver_fondos");
+
+    const $ = (id) => document.getElementById(id);
+    const alerta   = $("alerta-fondo");
+    const historial = $("historial-fondo");
+    const cacheUsuarios = new Map();
+
+    function mostrarAlerta(tipo, msg) {
+      alerta.textContent = msg;
+      alerta.className = `alerta alerta-${tipo} show`;
+    }
+    function ocultarAlerta() {
+      alerta.className = "alerta alerta-error";
+      alerta.textContent = "";
+    }
+
+    // ── Permisos de edición ───────────────────────────────────────────────────
+    // Solo CEO y finanzas pueden registrar movimientos manuales
+    if (!usuarioTienePermiso("editar_fondos")) {
+      $("bloque-edicion-fondo").style.display = "none";
+    }
+
+    // ── Balance ───────────────────────────────────────────────────────────────
+    onSnapshot(doc(db, "fondos", "principal"), (snap) => {
+      const data = snap.exists() ? snap.data() : { balance: 0 };
+      $("fondo-balance").textContent = formatearMoneda(Number(data.balance || 0));
+    });
+
+    // ── Historial reciente ────────────────────────────────────────────────────
+    async function obtenerNombre(uid) {
+      if (!uid) return "—";
+      if (cacheUsuarios.has(uid)) return cacheUsuarios.get(uid);
+      const snap = await getDoc(doc(db, "usuarios", uid));
+      const nombre = snap.exists() ? (snap.data().nombre || uid) : uid;
+      cacheUsuarios.set(uid, nombre);
+      return nombre;
+    }
+
+    function labelOrigen(mov) {
+      const map = { venta: "Venta", compra: "Compra", manual: "Manual", merma: "Merma" };
+      return map[mov.origen] || mov.origen || "—";
+    }
+
+    onSnapshot(
+      query(collection(db, "fondos_entrada"), orderBy("creadoEn", "desc"), limit(20)),
+      async (snap) => {
+        if (snap.empty) {
+          historial.innerHTML = `
+            <div class="empty-state">
+              <span class="emoji">💳</span>
+              <p>No hay movimientos registrados.</p>
+            </div>`;
+          return;
+        }
+        const resueltos = await Promise.all(
+          snap.docs.map(async d => {
+            const m = { id: d.id, ...d.data() };
+            if (!m.usuarioNombre) m.usuarioNombre = await obtenerNombre(m.usuarioId);
+            return m;
+          })
+        );
+        historial.innerHTML = resueltos.map(mov => {
+          const clase = mov.tipo === "ingreso" ? "ingreso" : "salida";
+          const icono = mov.tipo === "ingreso" ? "▲" : "▼";
+          return `
+            <div class="fondo-item">
+              <div>
+                <div class="fondo-titulo">${icono} ${mov.titulo || mov.descripcion || "Movimiento"}</div>
+                <div class="fondo-meta">${labelOrigen(mov)} · ${mov.usuarioNombre || "—"}</div>
+              </div>
+              <div class="fondo-monto ${clase}">
+                ${mov.tipo === "ingreso" ? "+" : "−"}${formatearMoneda(mov.monto || 0)}
+              </div>
+            </div>`;
+        }).join("");
+      }
+    );
+
+    // ── Guardar movimiento ────────────────────────────────────────────────────
+    const btnGuardar = $("btn-guardar-fondo");
+    if (btnGuardar) {
+      btnGuardar.addEventListener("click", async () => {
+        ocultarAlerta();
+        const user = auth.currentUser;
+        if (!user) { mostrarAlerta("error", "No se pudo identificar al usuario."); return; }
+
+        btnGuardar.disabled    = true;
+        btnGuardar.textContent = "⏳ Guardando...";
+        try {
+          const datosUser = getUsuarioActual();
+          const desc = $("descripcion-movimiento").value.trim();
+          await registrarMovimientoFondo({
+            usuarioId:    user.uid,
+            usuarioNombre: datosUser.nombre || user.displayName || user.email,
+            tipo:         $("tipo-movimiento").value,
+            monto:        $("monto-movimiento").value,
+            descripcion:  desc,
+            titulo:       desc || "Movimiento manual",
+          });
+          $("monto-movimiento").value    = "";
+          $("descripcion-movimiento").value = "";
+          mostrarAlerta("success", "Movimiento registrado correctamente.");
+        } catch (err) {
+          mostrarAlerta("error", err.message || "No se pudo registrar el movimiento.");
+        } finally {
+          btnGuardar.disabled    = false;
+          btnGuardar.textContent = "Registrar movimiento";
+        }
+      });
+    }
+  </script>
 </body>
 </html>
