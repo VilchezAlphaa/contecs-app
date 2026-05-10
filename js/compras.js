@@ -1,7 +1,7 @@
 import { guardRoute, requirePermiso, getUsuarioActual } from "./auth.js";
 import { escucharCategorias, getEmoji } from "./catalogo.js";
 import { db, auth } from "./firebase-config.js";
-import { formatearMoneda, registrarCompra } from "./operaciones.js";
+import { formatearMoneda, registrarCompra, esperarAuthListo } from "./operaciones.js";
 import {
   collection, query, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -386,6 +386,8 @@ async function finalizarCompra() {
   ocultarAlerta();
 
   try {
+    await esperarAuthListo();
+    
     const usuarioActual = auth.currentUser;
     if (!usuarioActual) {
       mostrarAlerta("error", "No se pudo identificar al usuario. Intenta iniciar sesión de nuevo.");
@@ -408,7 +410,15 @@ async function finalizarCompra() {
     factura.value = "";
     renderCarrito();
     renderPreviewFactura();
-    mostrarAlerta("success", `Compra registrada. Total ${formatearMoneda(resultado.total)}.`);
+    
+    // Mostrar mensaje según si la factura se subió o no
+    if (resultado.facturaSubida) {
+      mostrarAlerta("success", `Compra registrada. Total ${formatearMoneda(resultado.total)}.`);
+    } else {
+      const avisoFactura = resultado.facturaError ? ` La factura quedó pendiente: ${resultado.facturaError}` : " La factura quedó pendiente.";
+      mostrarAlerta("aviso", `Compra registrada. Total ${formatearMoneda(resultado.total)}.${avisoFactura}`);
+    }
+    
     nota.value = "";
     proveedor.value = "";
   } catch (error) {

@@ -1,6 +1,6 @@
 import { auth, db, storage } from "./firebase-config.js";
 import {
-  collection, doc, runTransaction, serverTimestamp
+  collection, doc, runTransaction, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   getDownloadURL,
@@ -84,6 +84,16 @@ function resumenItemPrincipal(items) {
   return `${items[0].nombre || "Movimiento"} +${items.length - 1} más`;
 }
 
+export async function esperarAuthListo(timeout = 10000) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(), timeout);
+    onAuthStateChanged(auth, () => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+}
+
 function validarFacturaArchivo(factura) {
   if (!factura) {
     throw new Error("Selecciona una factura.");
@@ -113,36 +123,6 @@ function descripcionErrorStorage(error, ruta, bucket) {
   const codigo = error?.code || "desconocido";
   const mensaje = error?.message || String(error || "Error desconocido");
   return `No se pudo subir la factura a ${bucket}/${ruta} (${codigo}). ${mensaje}`;
-}
-
-function esperarAuthListo() {
-  if (auth.currentUser) {
-    return Promise.resolve(auth.currentUser);
-  }
-
-  return new Promise((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      cleanup();
-      reject(new Error("Firebase Auth todavía no está listo para subir la factura."));
-    }, 10000);
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      cleanup();
-      if (user) {
-        resolve(user);
-      } else {
-        reject(new Error("Debes iniciar sesión de nuevo para subir la factura."));
-      }
-    }, (error) => {
-      cleanup();
-      reject(error);
-    });
-
-    function cleanup() {
-      window.clearTimeout(timeoutId);
-      unsubscribe();
-    }
-  });
 }
 
 export async function subirFacturaAStorage({ compraId, factura, usuarioId }) {
@@ -311,13 +291,8 @@ export async function registrarCompra({ usuarioId, usuarioNombre = "", proveedor
   const fondoMovimientoRef = crearMovimientoFondoRef();
   const movimientoRefs = items.map(() => crearMovimientoInventarioRef());
 
-  const facturaMetadata = await subirFacturaAStorage({
-    compraId: compraRef.id,
-    factura,
-    usuarioId,
-  });
-
-  return runTransaction(db, async (tx) => {
+  // Primero: guardar compra en Firestore (atomicamente)
+  const transactionResult = await runTransaction(db, async (tx) => {
     const fondoSnap = await tx.get(fondoRef());
     const lecturas = await leerProductosTx(tx, items);
 
@@ -398,12 +373,50 @@ export async function registrarCompra({ usuarioId, usuarioNombre = "", proveedor
       total,
       metodoPago,
       nota,
-      factura: facturaMetadata,
+      factura: null,
+      facturaEstado: "pendiente",
+      facturaError: null,
       creadoEn: serverTimestamp(),
     });
 
     return { id: compraRef.id, total, balance: nuevoBalance, items: lineas };
   });
+
+  // Segundo: intenta subir factura de manera no-bloqueante
+  let facturaSubida = false;
+  let facturaError = null;
+
+  try {
+    const facturaMetadata = await subirFacturaAStorage({
+      compraId: transactionResult.id,
+      factura,
+      usuarioId,
+    });
+
+    // Éxito: actualiza el documento con la factura
+    await setDoc(doc(db, "compras", transactionResult.id), {
+      factura: facturaMetadata,
+      facturaEstado: "subida",
+      facturaError: null,
+      actualizadoEn: serverTimestamp(),
+    }, { merge: true });
+
+    facturaSubida = true;
+  } catch (error) {
+    // Fallo: registra el error pero NO detiene el proceso
+    facturaError = error.message || "Error desconocido al subir factura.";
+    await setDoc(doc(db, "compras", transactionResult.id), {
+      facturaEstado: "error",
+      facturaError,
+      actualizadoEn: serverTimestamp(),
+    }, { merge: true });
+  }
+
+  return {
+    ...transactionResult,
+    facturaSubida,
+    facturaError,
+  };
 }
 
 export async function ajustarStock({ usuarioId, productoId, cantidad, tipo, motivo = "" }) {
