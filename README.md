@@ -10,6 +10,7 @@ App web para gestión de inventario, ventas, fondos y bitácora de CONTECS.
 
 ## Estructura
 ```
+
 contecs-app/
 ├── index.html          ← Login
 ├── dashboard.html      ← Panel principal
