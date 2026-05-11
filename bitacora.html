@@ -6,6 +6,30 @@
   <title>CONTECS — Bitácora</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
+    /* ── Botón de volver estético ── */
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.55);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      text-decoration: none;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.32);
+      border-color: #fff;
+      transform: scale(1.08);
+    }
     /* ── TABS ── */
     .tabs {
       display: flex;
@@ -173,7 +197,7 @@
 <body>
   <div class="topbar">
     <h1>📋 Bitácora</h1>
-    <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
+    <a href="dashboard.html" class="btn-volver" title="Volver">&#8592;</a>
   </div>
 
   <div class="container">

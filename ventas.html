@@ -6,602 +6,210 @@
   <title>CONTECS — Ventas</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
-    .panel-resumen {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
+    .btn-volver {
+      display:inline-flex;align-items:center;justify-content:center;
+      width:36px;height:36px;border-radius:50%;
+      background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55);
+      color:#fff;font-size:17px;font-weight:900;text-decoration:none;
+      transition:background .18s,transform .15s;flex-shrink:0;line-height:1;
     }
-    .resumen-box {
-      background: #fff;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: var(--sombra-sm);
-      border-left: 3px solid var(--verde-claro);
-    }
-    .resumen-box .lbl { font-size: 12px; color: var(--gris-medio); margin-bottom: 4px; }
-    .resumen-box .val { font-size: 21px; font-weight: 800; color: var(--verde-oscuro); }
-
-    /* Modo toggle: venta / merma */
-    .modo-toggle {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .modo-btn {
-      padding: 12px;
-      border-radius: var(--radio);
-      border: 2px solid var(--gris-borde);
-      background: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-      transition: border-color 0.2s, background 0.2s, color 0.2s;
-      color: var(--gris-medio);
-    }
-    .modo-btn.activo-venta {
-      border-color: var(--verde);
-      background: var(--verde-fondo);
-      color: var(--verde-oscuro);
-    }
-    .modo-btn.activo-merma {
-      border-color: var(--rojo);
-      background: var(--rojo-fondo);
-      color: var(--rojo);
-    }
-    .modo-banner {
-      display: none;
-      padding: 10px 14px;
-      border-radius: var(--radio-sm);
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .modo-banner.merma {
-      display: block;
-      background: var(--rojo-fondo);
-      color: var(--rojo);
-      border: 1px solid rgba(192,57,43,0.2);
-    }
-
-    .venta-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .venta-card {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: var(--sombra-sm);
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-left: 3px solid var(--verde-claro);
-    }
-    .venta-card.alerta  { border-left-color: var(--amarillo); }
-    .venta-card.agotado { border-left-color: var(--rojo); opacity: 0.92; }
-    .venta-icono { font-size: 28px; line-height: 1; }
-    .venta-info  { flex: 1; min-width: 0; }
-    .venta-nombre { font-weight: 700; color: var(--gris-texto); }
-    .venta-meta   { font-size: 12px; color: var(--gris-medio); }
-
-    .carrito-item {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: var(--sombra-sm);
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-    .carrito-controles { display: flex; gap: 8px; margin-top: 10px; }
-    .chip-btn {
-      border: 1px solid var(--gris-borde);
-      border-radius: 999px;
-      background: #fff;
-      padding: 7px 12px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .chip-danger { border-color: rgba(192,57,43,0.25); color: var(--rojo); }
-
-    .seccion-cat { margin-bottom: 18px; }
-    .seccion-cat-titulo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      color: var(--verde-oscuro);
-      margin-bottom: 10px;
-    }
-
-    /* Método de pago tabs */
-    .metodo-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-    .metodo-tab {
-      padding: 10px;
-      border-radius: var(--radio-sm);
-      border: 2px solid var(--gris-borde);
-      background: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      color: var(--gris-medio);
-      transition: border-color 0.2s, background 0.2s, color 0.2s;
-    }
-    .metodo-tab.activo {
-      border-color: var(--verde);
-      background: var(--verde-fondo);
-      color: var(--verde-oscuro);
-    }
-
-    /* Botón de registrar cambia de color en merma */
-    .btn-registrar-merma {
-      background: var(--rojo) !important;
-    }
-    .btn-registrar-merma:hover {
-      background: #a93226 !important;
-    }
-
-    .empty-state { text-align:center; padding:24px 16px; color:var(--gris-medio); }
-    .empty-state .emoji { font-size:40px; display:block; margin-bottom:8px; }
-
-    @media (min-width: 680px) {
-      .venta-grid { grid-template-columns: 1fr 1fr; }
-    }
+    .btn-volver:hover{background:rgba(255,255,255,.32);border-color:#fff;transform:scale(1.08);}
+    .panel-resumen{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .resumen-box{background:#fff;border-radius:14px;padding:16px;box-shadow:var(--sombra-sm);border-left:3px solid var(--verde-claro);}
+    .resumen-box .lbl{font-size:12px;color:var(--gris-medio);margin-bottom:4px;}
+    .resumen-box .val{font-size:21px;font-weight:800;color:var(--verde-oscuro);}
+    .venta-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+    .venta-card{background:#fff;border-radius:14px;box-shadow:var(--sombra-sm);padding:14px;display:flex;align-items:center;gap:12px;border-left:3px solid var(--verde-claro);}
+    .venta-card.alerta{border-left-color:var(--amarillo);}
+    .venta-card.agotado{border-left-color:var(--rojo);opacity:.88;}
+    .venta-icono{font-size:28px;line-height:1;}
+    .venta-info{flex:1;min-width:0;}
+    .venta-nombre{font-weight:700;color:var(--gris-texto);}
+    .venta-meta{font-size:12px;color:var(--gris-medio);}
+    .carrito-item{background:#fff;border-radius:14px;box-shadow:var(--sombra-sm);padding:14px;margin-bottom:10px;}
+    .carrito-controles{display:flex;gap:8px;margin-top:10px;}
+    .chip-btn{border:1px solid var(--gris-borde);border-radius:999px;background:#fff;padding:7px 12px;font-size:13px;cursor:pointer;}
+    .chip-danger{border-color:rgba(192,57,43,.25);color:var(--rojo);}
+    .merma-filtros{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+    .merma-filtros .form-group{margin-bottom:0;}
+    .merma-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--rojo-fondo);border-radius:var(--radio-sm);margin-bottom:6px;gap:8px;}
+    .merma-item-nombre{font-size:13px;font-weight:600;color:var(--gris-texto);flex:1;}
+    .merma-item-cant{font-size:13px;color:var(--rojo);font-weight:700;white-space:nowrap;}
+    .seccion-cat{margin-bottom:18px;}
+    .seccion-cat-titulo{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--verde-oscuro);margin-bottom:10px;}
+    .empty-state{text-align:center;padding:24px 16px;color:var(--gris-medio);}
+    .empty-state .emoji{font-size:40px;display:block;margin-bottom:8px;}
+    @media(min-width:680px){.venta-grid{grid-template-columns:1fr 1fr;}}
   </style>
 </head>
 <body>
   <div class="topbar">
-    <h1>Ventas / Mermas</h1>
-    <a href="dashboard.html" class="topbar-link">← Volver</a>
+    <h1>Registrar Ventas</h1>
+    <a href="dashboard.html" class="btn-volver" title="Volver">&#8592;</a>
   </div>
-
   <div class="container">
     <div class="alerta alerta-error" id="alerta-venta"></div>
-
-    <!-- Resumen -->
     <div class="card">
       <div class="card-title">Resumen</div>
       <div class="panel-resumen">
-        <div class="resumen-box">
-          <div class="lbl">Items en carrito</div>
-          <div class="val" id="resumen-items">0 unidades</div>
-        </div>
-        <div class="resumen-box">
-          <div class="lbl">Total</div>
-          <div class="val" id="resumen-total">$0.00</div>
-        </div>
+        <div class="resumen-box"><div class="lbl">Items en carrito</div><div class="val" id="resumen-items">0 unidades</div></div>
+        <div class="resumen-box"><div class="lbl">Total venta</div><div class="val" id="resumen-total">$0.00</div></div>
       </div>
-      <button type="button" class="btn btn-outline btn-sm" id="btn-limpiar-carrito">Vaciar carrito</button>
+      <button type="button" class="btn btn-outline btn-sm" id="btn-limpiar-carrito">Vaciar todo</button>
     </div>
-
     <div class="spinner-wrap" id="estado-carga"><div class="spinner"></div></div>
-
     <div id="pantalla-venta" class="is-hidden">
-
-      <!-- Toggle venta / merma -->
-      <div class="card">
-        <div class="card-title">Modo de registro</div>
-        <div class="modo-toggle">
-          <button class="modo-btn activo-venta" id="btn-modo-venta">🧾 Venta</button>
-          <button class="modo-btn" id="btn-modo-merma">⚠️ Merma</button>
-        </div>
-        <div class="modo-banner merma is-hidden" id="banner-merma">
-          ⚠️ Modo MERMA activo — se descontará del inventario sin sumar a fondos.
-        </div>
-      </div>
-
-      <!-- Búsqueda de productos -->
       <div class="card">
         <div class="card-title">Buscar productos</div>
-        <div class="form-group">
-          <input type="text" id="buscador-productos" placeholder="Buscar por nombre..."/>
-        </div>
+        <div class="form-group"><input type="text" id="buscador-productos" placeholder="Buscar por nombre..."/></div>
         <div id="productos-wrap"></div>
       </div>
-
-      <!-- Carrito -->
-      <div class="card">
-        <div class="card-title">Carrito</div>
-        <div id="carrito-wrap"></div>
-
-        <!-- Método de pago (solo en modo venta) -->
-        <div id="bloque-metodo">
-          <div class="form-group" style="margin-top:4px;">
-            <label>Método de pago</label>
-            <div class="metodo-tabs">
-              <button class="metodo-tab activo" data-metodo="efectivo">💵 Efectivo</button>
-              <button class="metodo-tab" data-metodo="tarjeta">💳 Tarjeta</button>
-            </div>
-            <input type="hidden" id="metodo-pago" value="efectivo"/>
-          </div>
+      <div class="card" style="border-left:3px solid var(--rojo);">
+        <div class="card-title" style="color:var(--rojo);">Mermas
+          <span style="font-size:12px;font-weight:400;color:var(--gris-medio);margin-left:8px;">Descuenta inventario sin sumar a fondos</span>
         </div>
-
-        <div class="form-group">
-          <label id="label-nota">Nota <span style="color:var(--gris-medio);font-weight:400;">(opcional)</span></label>
-          <textarea id="nota-venta" rows="2" placeholder="Observaciones..."></textarea>
+        <div class="merma-filtros">
+          <div class="form-group"><label for="merma-cat">Categoría</label><select id="merma-cat"><option value="">Seleccionar...</option></select></div>
+          <div class="form-group"><label for="merma-prod">Producto</label><select id="merma-prod" disabled><option value="">Elige categoría primero</option></select></div>
         </div>
-
-        <!-- Motivo merma (solo en modo merma) -->
-        <div class="form-group is-hidden" id="bloque-motivo">
+        <div class="form-group" style="margin-bottom:10px;"><label for="merma-cant">Cantidad</label><input type="number" id="merma-cant" min="1" value="1"/></div>
+        <button type="button" class="btn btn-sm btn-outline" id="btn-agregar-merma" style="border-color:var(--rojo);color:var(--rojo);width:100%;margin-bottom:14px;">+ Agregar a merma</button>
+        <div id="merma-lista"><p style="font-size:13px;color:var(--gris-medio);">Ningún producto en merma aún.</p></div>
+        <div class="form-group" id="bloque-motivo-merma" style="margin-top:10px;display:none;">
           <label>Motivo de merma <span style="color:var(--rojo);">*</span></label>
           <textarea id="motivo-merma" rows="2" placeholder="Ej: producto vencido, rotura, pérdida..."></textarea>
         </div>
-
-        <button class="btn btn-primary" id="btn-finalizar-venta">Registrar venta</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Carrito</div>
+        <div id="carrito-wrap"></div>
+        <div class="form-group" style="margin-top:10px;">
+          <label>Nota <span style="color:var(--gris-medio);font-weight:400;">(opcional)</span></label>
+          <textarea id="nota-venta" rows="2" placeholder="Observaciones de esta venta..."></textarea>
+        </div>
+        <button class="btn btn-primary" id="btn-finalizar-venta" style="margin-top:8px;">Registrar venta</button>
       </div>
     </div>
   </div>
-
   <script type="module">
     import { guardRoute, requirePermiso, getUsuarioActual } from "./js/auth.js";
     import { escucharCategorias, getEmoji, estadoStock } from "./js/catalogo.js";
     import { db, auth } from "./js/firebase-config.js";
-    import { formatearMoneda, registrarVenta, registrarMerma } from "./js/operaciones.js";
-    import {
-      collection, query, where, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-    guardRoute();
-    requirePermiso("registrar_ventas");
-
-    // ── Estado ────────────────────────────────────────────────────────────────
-    const estado = {
-      categorias: [],
-      productos: [],
-      termino: "",
-      carrito: new Map(),
-      cargando: true,
-      modo: "venta",          // "venta" | "merma"
-      metodoPago: "efectivo", // solo aplica en modo venta
-    };
-
-    const $ = (id) => document.getElementById(id);
-    const alerta        = $("alerta-venta");
-    const buscador      = $("buscador-productos");
-    const btnFinalizar  = $("btn-finalizar-venta");
-    const inputMetodo   = $("metodo-pago");
-
-    // ── Alertas ───────────────────────────────────────────────────────────────
-    function mostrarAlerta(tipo, msg) {
-      alerta.textContent = msg;
-      alerta.className = `alerta alerta-${tipo} show`;
+    import { formatearMoneda, registrarVentaConMerma } from "./js/operaciones.js";
+    import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    guardRoute(); requirePermiso("registrar_ventas");
+    const estado = { categorias:[], productos:[], termino:"", carrito:new Map(), mermaItems:new Map(), cargando:true };
+    const $=(id)=>document.getElementById(id);
+    const alerta=$("alerta-venta"), buscador=$("buscador-productos"), btnFinalizar=$("btn-finalizar-venta");
+    function mostrarAlerta(t,m){alerta.textContent=m;alerta.className=`alerta alerta-${t} show`;}
+    function ocultarAlerta(){alerta.className="alerta alerta-error";alerta.textContent="";}
+    function totalCarrito(){let t=0;estado.carrito.forEach(i=>t+=i.precioUnitario*i.cantidad);return t;}
+    function cantidadTotal(){let t=0;estado.carrito.forEach(i=>t+=i.cantidad);return t;}
+    function actualizarResumen(){
+      const n=cantidadTotal();
+      $("resumen-items").textContent=`${n} unidad${n===1?"":"es"}`;
+      $("resumen-total").textContent=formatearMoneda(totalCarrito());
+      btnFinalizar.disabled=estado.carrito.size===0;
     }
-    function ocultarAlerta() {
-      alerta.className = "alerta alerta-error";
-      alerta.textContent = "";
+    function poblarCatMerma(){
+      const sel=$("merma-cat"),actual=sel.value;
+      sel.innerHTML='<option value="">Seleccionar categoría...</option>'+estado.categorias.map(c=>`<option value="${c.id}">${getEmoji(c.iconoId)} ${c.nombre}</option>`).join("");
+      if(actual)sel.value=actual;
     }
-
-    // ── Resumen ───────────────────────────────────────────────────────────────
-    function totalCarrito() {
-      let t = 0;
-      estado.carrito.forEach(item => t += item.precioUnitario * item.cantidad);
-      return t;
-    }
-    function cantidadTotal() {
-      let t = 0;
-      estado.carrito.forEach(item => t += item.cantidad);
-      return t;
-    }
-    function actualizarResumen() {
-      const n = cantidadTotal();
-      $("resumen-items").textContent = `${n} unidad${n === 1 ? "" : "es"}`;
-      $("resumen-total").textContent =
-        estado.modo === "merma" ? `${n} und. (merma)` : formatearMoneda(totalCarrito());
-      btnFinalizar.disabled = estado.carrito.size === 0;
-    }
-
-    // ── Toggle de modo ────────────────────────────────────────────────────────
-    const btnModoVenta  = $("btn-modo-venta");
-    const btnModoMerma  = $("btn-modo-merma");
-    const bannerMerma   = $("banner-merma");
-    const bloqueMetodo  = $("bloque-metodo");
-    const bloqueMotivo  = $("bloque-motivo");
-
-    function actualizarModo() {
-      const esMerma = estado.modo === "merma";
-
-      btnModoVenta.className = `modo-btn ${esMerma ? "" : "activo-venta"}`;
-      btnModoMerma.className = `modo-btn ${esMerma ? "activo-merma" : ""}`;
-      bannerMerma.classList.toggle("is-hidden", !esMerma);
-      bloqueMetodo.classList.toggle("is-hidden", esMerma);
-      bloqueMotivo.classList.toggle("is-hidden", !esMerma);
-
-      btnFinalizar.textContent = esMerma ? "⚠️ Registrar merma" : "Registrar venta";
-      btnFinalizar.className   = `btn ${esMerma ? "btn-registrar-merma" : "btn-primary"}`;
-
-      estado.carrito.clear();
-      renderCarrito();
-      ocultarAlerta();
-    }
-
-    btnModoVenta.addEventListener("click", () => { estado.modo = "venta";  actualizarModo(); });
-    btnModoMerma.addEventListener("click", () => { estado.modo = "merma"; actualizarModo(); });
-
-    // ── Método de pago (tabs) ─────────────────────────────────────────────────
-    document.querySelectorAll(".metodo-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".metodo-tab").forEach(t => t.classList.remove("activo"));
-        tab.classList.add("activo");
-        estado.metodoPago = tab.dataset.metodo;
-        inputMetodo.value = tab.dataset.metodo;
-      });
+    $("merma-cat").addEventListener("change",()=>{
+      const catId=$("merma-cat").value,selProd=$("merma-prod");
+      if(!catId){selProd.innerHTML='<option value="">Elige categoría primero</option>';selProd.disabled=true;return;}
+      const prods=estado.productos.filter(p=>p.categoriaId===catId);
+      if(!prods.length){selProd.innerHTML='<option value="">Sin productos</option>';selProd.disabled=true;return;}
+      selProd.innerHTML='<option value="">Seleccionar producto...</option>'+prods.map(p=>`<option value="${p.id}">${getEmoji(p.iconoId)} ${p.nombre} (stock: ${p.stock??0})</option>`).join("");
+      selProd.disabled=false;
     });
-
-    // ── Carrito ───────────────────────────────────────────────────────────────
-    function agregarAlCarrito(producto) {
-      const actual = estado.carrito.get(producto.id);
-      const stock  = Number(producto.stock || 0);
-      if (actual) {
-        if (actual.cantidad >= stock) {
-          mostrarAlerta("aviso", `No hay más stock para ${producto.nombre}.`);
-          return;
-        }
-        actual.cantidad += 1;
-      } else {
-        if (stock <= 0) {
-          mostrarAlerta("aviso", `${producto.nombre} está agotado.`);
-          return;
-        }
-        estado.carrito.set(producto.id, {
-          productoId: producto.id,
-          nombre: producto.nombre,
-          cantidad: 1,
-          precioUnitario: Number(producto.precioVenta || 0),
-          stockDisponible: stock,
-        });
-      }
-      ocultarAlerta();
-      renderCarrito();
+    $("btn-agregar-merma").addEventListener("click",()=>{
+      const prodId=$("merma-prod").value,cant=parseInt($("merma-cant").value,10);
+      if(!prodId){mostrarAlerta("aviso","Elige un producto para la merma.");return;}
+      if(!cant||cant<1){mostrarAlerta("aviso","La cantidad debe ser al menos 1.");return;}
+      const prod=estado.productos.find(p=>p.id===prodId);if(!prod)return;
+      const stockDisp=Number(prod.stock??0),yaEnMerma=estado.mermaItems.get(prodId)?.cantidad??0;
+      if(yaEnMerma+cant>stockDisp){mostrarAlerta("aviso",`Stock insuficiente para merma de ${prod.nombre} (disponible: ${stockDisp}).`);return;}
+      if(estado.mermaItems.has(prodId))estado.mermaItems.get(prodId).cantidad+=cant;
+      else estado.mermaItems.set(prodId,{productoId:prodId,nombre:prod.nombre,cantidad:cant});
+      $("merma-prod").value="";$("merma-cant").value="1";
+      ocultarAlerta();renderMermaLista();
+    });
+    function renderMermaLista(){
+      const lista=$("merma-lista"),motivo=$("bloque-motivo-merma"),items=[...estado.mermaItems.values()];
+      if(!items.length){lista.innerHTML='<p style="font-size:13px;color:var(--gris-medio);">Ningún producto en merma aún.</p>';motivo.style.display="none";return;}
+      motivo.style.display="block";
+      lista.innerHTML=items.map(it=>`<div class="merma-item"><div class="merma-item-nombre">${it.nombre}</div><div class="merma-item-cant">−${it.cantidad} und.</div><button class="chip-btn chip-danger" data-quitar-merma="${it.productoId}" style="padding:4px 10px;font-size:12px;">✕</button></div>`).join("");
+      lista.querySelectorAll("[data-quitar-merma]").forEach(btn=>btn.addEventListener("click",()=>{estado.mermaItems.delete(btn.dataset.quitarMerma);renderMermaLista();}));
     }
-
-    function cambiarCantidad(id, delta) {
-      const item = estado.carrito.get(id);
-      if (!item) return;
-      const nuevo = item.cantidad + delta;
-      if (nuevo <= 0) estado.carrito.delete(id);
-      else item.cantidad = nuevo;
-      renderCarrito();
+    function agregarAlCarrito(producto){
+      const actual=estado.carrito.get(producto.id),stock=Number(producto.stock||0);
+      if(actual){if(actual.cantidad>=stock){mostrarAlerta("aviso",`No hay más stock para ${producto.nombre}.`);return;}actual.cantidad+=1;}
+      else{if(stock<=0){mostrarAlerta("aviso",`${producto.nombre} está agotado.`);return;}
+        estado.carrito.set(producto.id,{productoId:producto.id,nombre:producto.nombre,cantidad:1,precioUnitario:Number(producto.precioVenta||0),stockDisponible:stock});}
+      ocultarAlerta();renderCarrito();
     }
-
-    function actualizarCantidad(id, valor) {
-      const item = estado.carrito.get(id);
-      if (!item) return;
-      const n = Math.trunc(Number(valor));
-      if (!Number.isFinite(n) || n <= 0) estado.carrito.delete(id);
-      else item.cantidad = n;
-      renderCarrito();
-    }
-
-    function actualizarPrecio(id, valor) {
-      const item = estado.carrito.get(id);
-      if (!item) return;
-      const n = Number(valor);
-      if (Number.isFinite(n) && n >= 0) { item.precioUnitario = n; renderCarrito(); }
-    }
-
-    function renderCarrito() {
-      const carritoWrap = $("carrito-wrap");
-      const items = [...estado.carrito.values()];
-      const esMerma = estado.modo === "merma";
-
-      if (items.length === 0) {
-        carritoWrap.innerHTML = `
-          <div class="empty-state">
-            <span class="emoji">${esMerma ? "⚠️" : "🧾"}</span>
-            <p>${esMerma ? "Agrega productos a reportar como merma." : "Aún no agregas productos a la venta."}</p>
-          </div>`;
-        actualizarResumen();
-        return;
-      }
-
-      carritoWrap.innerHTML = items.map(item => {
-        const prod    = estado.productos.find(p => p.id === item.productoId);
-        const restante = Number(prod?.stock || 0) - item.cantidad;
-        const avisoStock = restante < 0
-          ? `<div style="color:var(--rojo);font-size:12px;margin-top:4px;">⚠️ Excede el stock disponible</div>` : "";
-
-        const filasPrecio = !esMerma ? `
-          <div class="form-group" style="margin-top:10px;">
-            <label>Precio</label>
-            <input type="text" inputmode="decimal" autocomplete="off"
-              value="${item.precioUnitario}" data-precio-id="${item.productoId}">
-          </div>` : "";
-
-        return `
-          <div class="carrito-item">
-            <div>
-              <div class="venta-nombre">${item.nombre}</div>
-              <div class="venta-meta">
-                ${esMerma
-                  ? `${item.cantidad} und. a mermar`
-                  : `${item.cantidad} × ${formatearMoneda(item.precioUnitario)} = ${formatearMoneda(item.cantidad * item.precioUnitario)}`}
-              </div>
-              ${avisoStock}
-            </div>
-            <div class="carrito-controles">
-              <button class="chip-btn" data-action="menos" data-id="${item.productoId}">−</button>
-              <button class="chip-btn" data-action="mas"   data-id="${item.productoId}">+</button>
-              <button class="chip-btn chip-danger" data-action="quitar" data-id="${item.productoId}">✕</button>
-            </div>
-            <div class="form-group" style="margin-top:10px;">
-              <label>Cantidad</label>
-              <input type="text" inputmode="numeric" autocomplete="off"
-                value="${item.cantidad}" data-cantidad-id="${item.productoId}">
-            </div>
-            ${filasPrecio}
-          </div>`;
+    function cambiarCantidad(id,delta){const item=estado.carrito.get(id);if(!item)return;const n=item.cantidad+delta;if(n<=0)estado.carrito.delete(id);else item.cantidad=n;renderCarrito();}
+    function actualizarCantidad(id,valor){const item=estado.carrito.get(id);if(!item)return;const n=Math.trunc(Number(valor));if(!Number.isFinite(n)||n<=0)estado.carrito.delete(id);else item.cantidad=n;renderCarrito();}
+    function actualizarPrecio(id,valor){const item=estado.carrito.get(id);if(!item)return;const n=Number(valor);if(Number.isFinite(n)&&n>=0){item.precioUnitario=n;renderCarrito();}}
+    function renderCarrito(){
+      const wrap=$("carrito-wrap"),items=[...estado.carrito.values()];
+      if(!items.length){wrap.innerHTML='<div class="empty-state"><span class="emoji">🧾</span><p>Aún no agregas productos a la venta.</p></div>';actualizarResumen();return;}
+      wrap.innerHTML=items.map(item=>{
+        const prod=estado.productos.find(p=>p.id===item.productoId),restante=Number(prod?.stock||0)-item.cantidad;
+        const avisoStock=restante<0?'<div style="color:var(--rojo);font-size:12px;margin-top:4px;">⚠️ Excede el stock disponible</div>':"";
+        return `<div class="carrito-item"><div class="venta-nombre">${item.nombre}</div><div class="venta-meta">${item.cantidad} × ${formatearMoneda(item.precioUnitario)} = ${formatearMoneda(item.cantidad*item.precioUnitario)}</div>${avisoStock}<div class="carrito-controles"><button class="chip-btn" data-action="menos" data-id="${item.productoId}">−</button><button class="chip-btn" data-action="mas" data-id="${item.productoId}">+</button><button class="chip-btn chip-danger" data-action="quitar" data-id="${item.productoId}">✕</button></div><div class="form-group" style="margin-top:10px;"><label>Cantidad</label><input type="text" inputmode="numeric" autocomplete="off" value="${item.cantidad}" data-cantidad-id="${item.productoId}"></div><div class="form-group" style="margin-top:6px;"><label>Precio unitario</label><input type="text" inputmode="decimal" autocomplete="off" value="${item.precioUnitario}" data-precio-id="${item.productoId}"></div></div>`;
       }).join("");
-
-      // Eventos de controles
-      carritoWrap.querySelectorAll("[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id     = btn.dataset.id;
-          const action = btn.dataset.action;
-          if (action === "menos")  cambiarCantidad(id, -1);
-          if (action === "mas")    cambiarCantidad(id, 1);
-          if (action === "quitar") { estado.carrito.delete(id); renderCarrito(); }
-        });
-      });
-      carritoWrap.querySelectorAll("[data-cantidad-id]").forEach(input => {
-        const h = () => actualizarCantidad(input.dataset.cantidadId, input.value);
-        input.addEventListener("change", h);
-        input.addEventListener("blur", h);
-        input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); input.blur(); } });
-      });
-      carritoWrap.querySelectorAll("[data-precio-id]").forEach(input => {
-        const h = () => actualizarPrecio(input.dataset.precioId, input.value);
-        input.addEventListener("change", h);
-        input.addEventListener("blur", h);
-        input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); input.blur(); } });
-      });
-
+      wrap.querySelectorAll("[data-action]").forEach(btn=>btn.addEventListener("click",()=>{const id=btn.dataset.id,a=btn.dataset.action;if(a==="menos")cambiarCantidad(id,-1);if(a==="mas")cambiarCantidad(id,1);if(a==="quitar"){estado.carrito.delete(id);renderCarrito();}}));
+      wrap.querySelectorAll("[data-cantidad-id]").forEach(input=>{const h=()=>actualizarCantidad(input.dataset.cantidadId,input.value);input.addEventListener("change",h);input.addEventListener("blur",h);input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();input.blur();}});});
+      wrap.querySelectorAll("[data-precio-id]").forEach(input=>{const h=()=>actualizarPrecio(input.dataset.precioId,input.value);input.addEventListener("change",h);input.addEventListener("blur",h);input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();input.blur();}});});
       actualizarResumen();
     }
-
-    // ── Render de productos ───────────────────────────────────────────────────
-    function renderProductos() {
-      const termino  = estado.termino.toLowerCase().trim();
-      const wrap     = $("productos-wrap");
-      wrap.innerHTML = "";
-
-      const filtrados = estado.productos.filter(p =>
-        !termino || p.nombre.toLowerCase().includes(termino)
-      );
-
-      if (filtrados.length === 0) {
-        wrap.innerHTML = `<div class="empty-state"><span class="emoji">🔍</span><p>Sin resultados.</p></div>`;
-        return;
-      }
-
-      estado.categorias.forEach(cat => {
-        const prods = filtrados.filter(p => p.categoriaId === cat.id);
-        if (prods.length === 0) return;
-
-        const sec   = document.createElement("div");
-        sec.className = "seccion-cat";
-        const tit  = document.createElement("div");
-        tit.className = "seccion-cat-titulo";
-        tit.innerHTML = `<span style="font-size:20px;">${getEmoji(cat.iconoId)}</span>${cat.nombre}`;
-        sec.appendChild(tit);
-
-        const grid = document.createElement("div");
-        grid.className = "venta-grid";
-        prods.forEach(prod => {
-          const est  = estadoStock(prod.stock ?? 0, prod.alertaMinima ?? 0);
-          const card = document.createElement("div");
-          card.className = `venta-card ${est !== "ok" ? est : ""}`;
-          card.innerHTML = `
-            <div class="venta-icono">${getEmoji(prod.iconoId)}</div>
-            <div class="venta-info">
-              <div class="venta-nombre">${prod.nombre}</div>
-              <div class="venta-meta">
-                ${formatearMoneda(prod.precioVenta || 0)} · Stock ${prod.stock ?? 0}
-              </div>
-            </div>
-            <button class="btn btn-sm btn-outline" style="width:auto;">Agregar</button>`;
-          card.querySelector("button").addEventListener("click", () => agregarAlCarrito(prod));
+    function renderProductos(){
+      const termino=estado.termino.toLowerCase().trim(),wrap=$("productos-wrap");
+      wrap.innerHTML="";
+      const filtrados=estado.productos.filter(p=>!termino||p.nombre.toLowerCase().includes(termino));
+      if(!filtrados.length){wrap.innerHTML='<div class="empty-state"><span class="emoji">🔍</span><p>Sin resultados.</p></div>';return;}
+      estado.categorias.forEach(cat=>{
+        const prods=filtrados.filter(p=>p.categoriaId===cat.id);if(!prods.length)return;
+        const sec=document.createElement("div");sec.className="seccion-cat";
+        sec.innerHTML=`<div class="seccion-cat-titulo"><span style="font-size:20px;">${getEmoji(cat.iconoId)}</span>${cat.nombre}</div>`;
+        const grid=document.createElement("div");grid.className="venta-grid";
+        prods.forEach(prod=>{
+          const est=estadoStock(prod.stock??0,prod.alertaMinima??0),card=document.createElement("div");
+          card.className=`venta-card ${est!=="ok"?est:""}`;
+          card.innerHTML=`<div class="venta-icono">${getEmoji(prod.iconoId)}</div><div class="venta-info"><div class="venta-nombre">${prod.nombre}</div><div class="venta-meta">${formatearMoneda(prod.precioVenta||0)} · Stock ${prod.stock??0}</div></div><button class="btn btn-sm btn-outline" style="width:auto;">Agregar</button>`;
+          card.querySelector("button").addEventListener("click",()=>agregarAlCarrito(prod));
           grid.appendChild(card);
         });
-        sec.appendChild(grid);
-        wrap.appendChild(sec);
+        sec.appendChild(grid);wrap.appendChild(sec);
       });
     }
-
-    // ── Finalizar (venta o merma) ─────────────────────────────────────────────
-    async function finalizar() {
-      if (btnFinalizar.disabled) return;
-      if (estado.carrito.size === 0) { mostrarAlerta("aviso", "Agrega al menos un producto."); return; }
-
-      const esMerma = estado.modo === "merma";
-
-      // Validar motivo en merma
-      if (esMerma) {
-        const motivo = $("motivo-merma").value.trim();
-        if (!motivo) { mostrarAlerta("aviso", "Escribe el motivo de la merma."); return; }
-      }
-
-      btnFinalizar.disabled   = true;
-      const textoOrig = btnFinalizar.textContent;
-      btnFinalizar.textContent = "⏳ Procesando...";
-      ocultarAlerta();
-
-      try {
-        const user = auth.currentUser;
-        if (!user) throw new Error("No se pudo identificar al usuario.");
-        const datosUser = getUsuarioActual();
-
-        if (esMerma) {
-          const motivo = $("motivo-merma").value.trim();
-          await registrarMerma({
-            usuarioId:    user.uid,
-            usuarioNombre: datosUser.nombre || user.displayName || user.email,
-            items:  [...estado.carrito.values()],
-            motivo,
-          });
-          estado.carrito.clear();
-          renderCarrito();
-          $("motivo-merma").value = "";
-          mostrarAlerta("success", `Merma registrada para ${cantidadTotal()} producto(s).`);
-        } else {
-          const resultado = await registrarVenta({
-            usuarioId:    user.uid,
-            usuarioNombre: datosUser.nombre || user.displayName || user.email,
-            items:  [...estado.carrito.values()],
-            metodoPago: estado.metodoPago,
-            nota:   $("nota-venta").value.trim(),
-          });
-          estado.carrito.clear();
-          renderCarrito();
-          $("nota-venta").value = "";
-          mostrarAlerta("success", `Venta registrada. Total ${formatearMoneda(resultado.total)}.`);
-        }
-      } catch (err) {
-        mostrarAlerta("error", err.message || "No se pudo completar el registro.");
-      } finally {
-        btnFinalizar.disabled    = false;
-        btnFinalizar.textContent = textoOrig;
-      }
+    async function finalizar(){
+      if(btnFinalizar.disabled)return;
+      if(!estado.carrito.size){mostrarAlerta("aviso","Agrega al menos un producto a la venta.");return;}
+      const hayMerma=estado.mermaItems.size>0,motivo=$("motivo-merma").value.trim();
+      if(hayMerma&&!motivo){mostrarAlerta("aviso","Escribe el motivo de la merma antes de registrar.");$("motivo-merma").focus();return;}
+      btnFinalizar.disabled=true;btnFinalizar.textContent="⏳ Procesando...";ocultarAlerta();
+      try{
+        const user=auth.currentUser;if(!user)throw new Error("No se pudo identificar al usuario.");
+        const datosUser=getUsuarioActual();
+        await registrarVentaConMerma({usuarioId:user.uid,usuarioNombre:datosUser.nombre||user.displayName||user.email,items:[...estado.carrito.values()],nota:$("nota-venta").value.trim(),mermaItems:hayMerma?[...estado.mermaItems.values()]:[],motivoMerma:motivo});
+        estado.carrito.clear();estado.mermaItems.clear();
+        renderCarrito();renderMermaLista();
+        $("nota-venta").value="";$("motivo-merma").value="";
+        mostrarAlerta("success","Venta registrada correctamente."+(hayMerma?" Merma incluida.":""));
+      }catch(err){mostrarAlerta("error",err.message||"No se pudo completar el registro.");}
+      finally{btnFinalizar.disabled=false;btnFinalizar.textContent="Registrar venta";}
     }
-
-    // ── Listeners ─────────────────────────────────────────────────────────────
-    buscador.addEventListener("input", e => { estado.termino = e.target.value; renderProductos(); });
-    $("btn-limpiar-carrito").addEventListener("click", () => { estado.carrito.clear(); renderCarrito(); ocultarAlerta(); });
-    btnFinalizar.addEventListener("click", finalizar);
-
-    // ── Firestore ─────────────────────────────────────────────────────────────
-    escucharCategorias(cats => {
-      estado.categorias = cats;
-      renderProductos();
-      estado.cargando = false;
-      renderEstadoCarga();
-    });
-
-    onSnapshot(
-      query(collection(db, "productos"), where("activo", "==", true)),
-      snap => {
-        estado.productos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderProductos();
-        renderCarrito();
-        estado.cargando = false;
-        renderEstadoCarga();
-      }
-    );
-
-    function renderEstadoCarga() {
-      $("estado-carga").style.display  = estado.cargando ? "block" : "none";
-      $("pantalla-venta").style.display = estado.cargando ? "none"  : "block";
-    }
-
-    renderCarrito();
-    renderEstadoCarga();
+    buscador.addEventListener("input",e=>{estado.termino=e.target.value;renderProductos();});
+    $("btn-limpiar-carrito").addEventListener("click",()=>{estado.carrito.clear();estado.mermaItems.clear();renderCarrito();renderMermaLista();ocultarAlerta();});
+    btnFinalizar.addEventListener("click",finalizar);
+    escucharCategorias(cats=>{estado.categorias=cats;renderProductos();poblarCatMerma();estado.cargando=false;renderEstadoCarga();});
+    onSnapshot(query(collection(db,"productos"),where("activo","==",true)),snap=>{estado.productos=snap.docs.map(d=>({id:d.id,...d.data()}));renderProductos();renderCarrito();poblarCatMerma();estado.cargando=false;renderEstadoCarga();});
+    function renderEstadoCarga(){$("estado-carga").style.display=estado.cargando?"block":"none";$("pantalla-venta").style.display=estado.cargando?"none":"block";}
+    renderCarrito();renderMermaLista();renderEstadoCarga();
   </script>
 </body>
 </html>

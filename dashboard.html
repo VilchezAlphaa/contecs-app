@@ -219,19 +219,19 @@
         statsEl.style.marginBottom = "16px";
         statsEl.innerHTML = `
           <div class="stat-card">
-            <div class="stat-label">💰 Fondo actual</div>
+            <div class="stat-label">Fondo actual</div>
             <div class="stat-valor" id="stat-fondo">${tienePermiso(rol,"ver_fondos") ? "Cargando..." : "—"}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">⚠️ Stock bajo</div>
+            <div class="stat-label">Stock bajo</div>
             <div id="stat-alertas" class="stat-valor">${tienePermiso(rol,"ver_inventario") ? "Cargando..." : "—"}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">📈 Ventas este mes</div>
+            <div class="stat-label">Ventas este mes</div>
             <div id="stat-ventas-mes" class="stat-valor">Cargando...</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">🛒 Compras este mes</div>
+            <div class="stat-label">Compras este mes</div>
             <div id="stat-compras-mes" class="stat-valor">Cargando...</div>
           </div>`;
         contenido.appendChild(statsEl);
