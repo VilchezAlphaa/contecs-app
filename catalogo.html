@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>CONTECS — Catálogo</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
@@ -469,8 +469,8 @@
             <div class="cat-count" id="count-${cat.id}">Cargando...</div>
           </div>
           <div class="cat-acciones">
-            <button class="btn-icon" data-edit="${cat.id}" title="Editar" style="font-size:12px;padding:5px 10px;">Editar</button>
-            <button class="btn-icon danger" data-del="${cat.id}" title="Eliminar" style="font-size:12px;padding:5px 10px;">Eliminar</button>
+            <button class="btn-icon" data-edit="${cat.id}" title="Editar">✏️</button>
+            <button class="btn-icon danger" data-del="${cat.id}" title="Eliminar">🗑️</button>
           </div>`;
 
         import("./js/catalogo.js").then(({ escucharProductosPorCategoria }) => {
@@ -668,7 +668,7 @@
         </div>
         <span class="stock-badge ${badgeClass}">${badgeText}</span>
         <div class="cat-acciones">
-          <button class="btn-icon" data-edit-prod="${prod.id}" title="Editar" style="font-size:12px;padding:5px 10px;">Editar</button>
+          <button class="btn-icon" data-edit-prod="${prod.id}" title="Editar">✏️</button>
           <button class="btn-icon ${inactivo ? "" : "danger"}" data-toggle-prod="${prod.id}" title="${inactivo ? "Reactivar" : "Desactivar"}">${inactivo ? "✅" : "🚫"}</button>
         </div>`;
 

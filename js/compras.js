@@ -42,6 +42,11 @@ function ocultarAlerta() {
   alerta.textContent = "";
 }
 
+function mostrarAlertaYScrollTop(tipo, mensaje) {
+  mostrarAlerta(tipo, mensaje);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function campoTextoValido(valor) {
   return String(valor || "").trim().length > 0;
 }
@@ -79,18 +84,10 @@ function tamanoLegible(bytes) {
 }
 
 function validarArchivoFactura(archivo) {
-  if (!archivo) {
-    throw new Error("Selecciona una factura.");
-  }
-
+  if (!archivo) throw new Error("Selecciona una factura.");
   const tiposPermitidos = ["application/pdf", "image/jpeg", "image/png", "image/gif", "image/webp"];
-  if (!tiposPermitidos.includes(archivo.type || "")) {
-    throw new Error("La factura debe ser un PDF o una imagen válida.");
-  }
-
-  if (archivo.size > 10 * 1024 * 1024) {
-    throw new Error("La factura no puede superar 10 MB.");
-  }
+  if (!tiposPermitidos.includes(archivo.type || "")) throw new Error("La factura debe ser un PDF o una imagen válida.");
+  if (archivo.size > 10 * 1024 * 1024) throw new Error("La factura no puede superar 10 MB.");
 }
 
 function limpiarPreviewFactura() {
@@ -131,7 +128,6 @@ function renderPreviewFactura() {
 
 function formularioCompraCompleto() {
   const carritoCompleto = [...estado.carrito.values()].every((item) => cantidadValida(item.cantidad) && subtotalValido(item.subtotal));
-
   return estado.carrito.size > 0
     && carritoCompleto
     && campoTextoValido(proveedor.value)
@@ -141,17 +137,13 @@ function formularioCompraCompleto() {
 
 function totalCarrito() {
   let total = 0;
-  estado.carrito.forEach((item) => {
-    total += subtotalItem(item);
-  });
+  estado.carrito.forEach((item) => { total += subtotalItem(item); });
   return total;
 }
 
 function cantidadTotal() {
   let total = 0;
-  estado.carrito.forEach((item) => {
-    total += item.cantidad;
-  });
+  estado.carrito.forEach((item) => { total += item.cantidad; });
   return total;
 }
 
@@ -265,30 +257,20 @@ function renderCarrito() {
   });
 
   carritoWrap.querySelectorAll("[data-subtotal-id]").forEach((input) => {
-    const handler = () => {
-      actualizarSubtotal(input.getAttribute("data-subtotal-id"), input.value);
-    };
+    const handler = () => { actualizarSubtotal(input.getAttribute("data-subtotal-id"), input.value); };
     input.addEventListener("change", handler);
     input.addEventListener("blur", handler);
     input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        input.blur();
-      }
+      if (event.key === "Enter") { event.preventDefault(); input.blur(); }
     });
   });
 
   carritoWrap.querySelectorAll("[data-cantidad-id]").forEach((input) => {
-    const handler = () => {
-      actualizarCantidad(input.getAttribute("data-cantidad-id"), input.value);
-    };
+    const handler = () => { actualizarCantidad(input.getAttribute("data-cantidad-id"), input.value); };
     input.addEventListener("change", handler);
     input.addEventListener("blur", handler);
     input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        input.blur();
-      }
+      if (event.key === "Enter") { event.preventDefault(); input.blur(); }
     });
   });
 
@@ -351,35 +333,49 @@ function renderProductos() {
 async function finalizarCompra() {
   const btn = document.getElementById("btn-finalizar-compra");
 
-  // Evitar múltiples clics
   if (btn.disabled) return;
-  if (!formularioCompraCompleto()) {
-    mostrarAlerta("aviso", "Completa todos los campos requeridos antes de registrar la compra.");
-    setTimeout(ocultarAlerta, 3000);
-    return;
+
+  // Validación visual por campo
+  let hayError = false;
+
+  const errProveedor = document.getElementById("err-proveedor");
+  if (!campoTextoValido(proveedor.value)) {
+    errProveedor.textContent = "El proveedor es obligatorio.";
+    errProveedor.classList.add("show");
+    hayError = true;
+  } else {
+    errProveedor.classList.remove("show");
+  }
+
+  const errMetodo = document.getElementById("err-metodo");
+  if (!campoTextoValido(metodoPago.value)) {
+    errMetodo.textContent = "Selecciona un método de pago.";
+    errMetodo.classList.add("show");
+    hayError = true;
+  } else {
+    errMetodo.classList.remove("show");
+  }
+
+  const errFactura = document.getElementById("err-factura");
+  if (!estado.factura) {
+    errFactura.textContent = "Debes adjuntar la factura.";
+    errFactura.classList.add("show");
+    hayError = true;
+  } else {
+    errFactura.classList.remove("show");
   }
 
   if (estado.carrito.size === 0) {
-    mostrarAlerta("aviso", "Agrega al menos un producto.");
+    mostrarAlertaYScrollTop("aviso", "Agrega al menos un producto al carrito.");
     return;
   }
 
-  if (!campoTextoValido(proveedor.value)) {
-    mostrarAlerta("aviso", "El proveedor es obligatorio.");
+  if (hayError) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    btn.disabled = false;
     return;
   }
 
-  if (!campoTextoValido(metodoPago.value)) {
-    mostrarAlerta("aviso", "El método de pago es obligatorio.");
-    return;
-  }
-
-  if (!estado.factura) {
-    mostrarAlerta("aviso", "Selecciona una factura antes de registrar la compra.");
-    return;
-  }
-
-  // Bloquear el botón y cambiar texto
   btn.disabled = true;
   const textoOriginal = btn.textContent;
   btn.textContent = "⏳ Procesando...";
@@ -387,10 +383,10 @@ async function finalizarCompra() {
 
   try {
     await esperarAuthListo();
-    
+
     const usuarioActual = auth.currentUser;
     if (!usuarioActual) {
-      mostrarAlerta("error", "No se pudo identificar al usuario. Intenta iniciar sesión de nuevo.");
+      mostrarAlertaYScrollTop("error", "No se pudo identificar al usuario. Intenta iniciar sesión de nuevo.");
       return;
     }
 
@@ -410,21 +406,19 @@ async function finalizarCompra() {
     factura.value = "";
     renderCarrito();
     renderPreviewFactura();
-    
-    // Mostrar mensaje según si la factura se subió o no
+
     if (resultado.facturaSubida) {
-      mostrarAlerta("success", `Compra registrada. Total ${formatearMoneda(resultado.total)}.`);
+      mostrarAlertaYScrollTop("success", `Compra registrada. Total ${formatearMoneda(resultado.total)}.`);
     } else {
       const avisoFactura = resultado.facturaError ? ` La factura quedó pendiente: ${resultado.facturaError}` : " La factura quedó pendiente.";
-      mostrarAlerta("aviso", `Compra registrada. Total ${formatearMoneda(resultado.total)}.${avisoFactura}`);
+      mostrarAlertaYScrollTop("aviso", `Compra registrada. Total ${formatearMoneda(resultado.total)}.${avisoFactura}`);
     }
-    
+
     nota.value = "";
     proveedor.value = "";
   } catch (error) {
-    mostrarAlerta("error", error.message || "No se pudo registrar la compra.");
+    mostrarAlertaYScrollTop("error", error.message || "No se pudo registrar la compra.");
   } finally {
-    // Reactivar el botón en caso de error o al terminar
     btn.disabled = false;
     btn.textContent = textoOriginal;
   }
@@ -464,7 +458,6 @@ nota.addEventListener("input", actualizarResumen);
 
 factura.addEventListener("change", () => {
   const archivo = factura.files && factura.files[0] ? factura.files[0] : null;
-
   try {
     validarArchivoFactura(archivo);
     estado.factura = archivo;
@@ -472,9 +465,8 @@ factura.addEventListener("change", () => {
   } catch (error) {
     estado.factura = null;
     factura.value = "";
-    mostrarAlerta("error", error.message || "No se pudo cargar la factura.");
+    mostrarAlertaYScrollTop("error", error.message || "No se pudo cargar la factura.");
   }
-
   renderPreviewFactura();
 });
 
