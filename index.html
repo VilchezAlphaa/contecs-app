@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>CONTECS — Iniciar Sesión</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,8 +33,13 @@
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 14px;
-      font-size: 32px;
       box-shadow: 0 6px 20px rgba(0,114,46,0.3);
+      overflow: hidden;
+    }
+    .logo-circle img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
     }
     .logo-wrap h2 {
       font-size: 26px;
@@ -109,7 +114,9 @@
 <body>
   <div class="login-box">
     <div class="logo-wrap">
-      <div class="logo-circle">🏛️</div>
+      <div class="logo-circle">
+        <img src="./logo.png" alt="CONTECS"/>
+      </div>
       <h2>CONTECS</h2>
       <p>Sistema de Gestión Organizacional</p>
     </div>
@@ -155,11 +162,8 @@
           msgAviso.classList.add("show");
           btn.disabled = false;
           btn.childNodes[1].textContent = " Continuar con Google";
-          // Escuchar en tiempo real — cuando el admin asigne rol, redirigir automáticamente
           const uid = sessionStorage.getItem("uid");
           if (uid) {
-            const { escucharCambiosDeRol } = await import("./js/auth.js");
-            // Escucha manual aquí porque guardRoute no aplica en index
             const { db } = await import("./js/firebase-config.js");
             const { doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
             onSnapshot(doc(db, "usuarios", uid), (snap) => {

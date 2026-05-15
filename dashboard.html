@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>CONTECS — Panel Principal</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
@@ -20,13 +20,18 @@
       animation-delay: 0.05s;
     }
     .bienvenida::after {
-      content: '🏛️';
+      content: '';
       position: absolute;
       right: 16px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 52px;
-      opacity: 0.12;
+      width: 72px;
+      height: 72px;
+      background-image: url('./logo.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.15;
     }
     .bienvenida .saludo { font-size: 13px; opacity: 0.8; }
     .bienvenida .nombre { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
@@ -94,7 +99,6 @@
       align-items: center;
       gap: 8px;
       border-bottom: 3px solid #39b54a;
-      /* Animación en cascada — se asigna delay por JS */
       opacity: 0;
       animation: cardCascade 0.42s var(--ease-spring) both;
       transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;
@@ -131,11 +135,28 @@
     .sin-rol-card .icono { font-size: 48px; margin-bottom: 12px; }
     .sin-rol-card h3 { font-size: 17px; color: #1a2e1e; margin-bottom: 8px; }
     .sin-rol-card p  { font-size: 14px; color: #8a9e8d; line-height: 1.5; }
+
+    /* ── LOGO EN TOPBAR ── */
+    .topbar-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <h1>CONTECS</h1>
+    <div class="topbar-left">
+      <img src="./logo.png" alt="CONTECS" class="topbar-logo"/>
+      <h1>CONTECS</h1>
+    </div>
     <button class="btn-logout" id="btn-logout">Salir</button>
   </div>
 
@@ -211,7 +232,6 @@
           refreshRol();
 
     } else {
-      // ── Stats ───────────────────────────────────────────────────────────────
       const mostrarStats = tienePermiso(rol, "ver_fondos") || tienePermiso(rol, "ver_inventario");
       if (mostrarStats) {
         const statsEl = document.createElement("div");
@@ -236,12 +256,10 @@
           </div>`;
         contenido.appendChild(statsEl);
 
-        // ── Stats mes actual ──────────────────────────────────────────────────
         const ahora = new Date();
         const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
         const finMes    = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59);
 
-        // Ventas del mes
         getDocs(query(
           collection(db, "ventas"),
           where("creadoEn", ">=", inicioMes),
@@ -257,7 +275,6 @@
           manejarErrorSnapshot(err, "ventas del mes");
         });
 
-        // Compras del mes
         getDocs(query(
           collection(db, "compras"),
           where("creadoEn", ">=", inicioMes),
@@ -308,7 +325,6 @@
         }
       }
 
-      // ── Módulos ─────────────────────────────────────────────────────────────
       const MODULOS = [
         { label: "Registrar Ventas", icono: "🧾", href: "ventas.html",     permiso: "registrar_ventas",   admin: false },
         { label: "Inventario",       icono: "📦", href: "inventario.html", permiso: "ver_inventario",     admin: false },
@@ -334,7 +350,6 @@
         a.href = tiene ? mod.href : "#";
         a.className = "modulo-btn" + (tiene ? (mod.admin ? " mod-admin" : "") : " bloqueado");
         a.innerHTML = `<span class="icono">${mod.icono}</span><span class="label">${mod.label}</span>`;
-        // Delay escalonado para cascada
         a.style.animationDelay = `${0.18 + idx * 0.06}s`;
         grid.appendChild(a);
       });
