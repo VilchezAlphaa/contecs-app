@@ -39,7 +39,7 @@ export const PERMISOS = {
   ver_precios:       ["junta", "coordinador", "finanzas"],
   aprobar_gastos:    ["junta", "coordinador"],
   exportar_datos:    ["junta", "coordinador", "finanzas", "logistica", "actividades"],
-  gestionar_usuarios:["ceo", "junta"],
+  gestionar_usuarios:["ceo"],
 };
 
 // Función para verificar si un rol tiene un permiso
