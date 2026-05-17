@@ -6,6 +6,30 @@
   <title>CONTECS — Exportar PDF</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
+    /* ── Botón de volver estético ── */
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.55);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      text-decoration: none;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.32);
+      border-color: #fff;
+      transform: scale(1.08);
+    }
     .tipo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -20,14 +44,13 @@
       cursor: pointer;
       background: #fff;
       user-select: none;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color .2s, background .2s;
     }
     .tipo-opt:hover { border-color: var(--verde-claro); background: var(--gris-suave); }
     .tipo-opt.seleccionado { border-color: var(--verde); background: var(--verde-fondo); }
     .tipo-opt .t-icono { font-size: 24px; margin-bottom: 6px; }
     .tipo-opt .t-label { font-size: 13px; font-weight: 600; color: var(--gris-texto); }
     .tipo-opt.seleccionado .t-label { color: var(--verde-oscuro); }
-
     .fechas-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -35,7 +58,6 @@
       margin-bottom: 16px;
     }
     .fechas-row .form-group { margin-bottom: 0; }
-
     .preview-card {
       background: var(--gris-suave);
       border-radius: var(--radio-sm);
@@ -52,32 +74,31 @@
 </head>
 <body>
   <div class="topbar">
-    <h1>📤 Exportar PDF</h1>
-    <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
+    <h1>Exportar PDF</h1>
+    <a href="dashboard.html" class="btn-volver" title="Volver">&#8592;</a>
   </div>
 
   <div class="container">
     <div class="seccion-titulo">Exportar datos a PDF</div>
-
     <div class="card">
-      <div class="card-title">¿Qué deseas exportar?</div>
+      <div class="card-title">Que deseas exportar?</div>
 
       <div class="tipo-grid" id="tipo-grid">
         <div class="tipo-opt seleccionado" data-tipo="ventas">
-          <div class="t-icono">🧾</div>
+          <div class="t-icono">&#128196;</div>
           <div class="t-label">Ventas</div>
         </div>
         <div class="tipo-opt" data-tipo="compras">
-          <div class="t-icono">🛒</div>
+          <div class="t-icono">&#128722;</div>
           <div class="t-label">Compras</div>
         </div>
         <div class="tipo-opt" data-tipo="inventario">
-          <div class="t-icono">📦</div>
+          <div class="t-icono">&#128230;</div>
           <div class="t-label">Inventario</div>
         </div>
-        <div class="tipo-opt" data-tipo="mermas">
-          <div class="t-icono">⚠️</div>
-          <div class="t-label">Mermas</div>
+        <div class="tipo-opt" data-tipo="fondos">
+          <div class="t-icono">&#128179;</div>
+          <div class="t-label">Movimientos de Fondos</div>
         </div>
       </div>
 
@@ -93,20 +114,19 @@
       </div>
 
       <button class="btn btn-primary" id="btn-exportar" style="width:100%;">
-        ⬇️ Exportar PDF
+        Exportar PDF
       </button>
 
       <div class="alerta alerta-error"   id="alerta-error"></div>
       <div class="alerta alerta-success" id="alerta-ok"></div>
 
       <div class="preview-card" id="preview-card">
-        <strong>📄 PDF generado:</strong> <span id="preview-nombre">—</span><br/>
-        <span id="preview-filas">—</span> registros exportados.
+        <strong>PDF generado:</strong> <span id="preview-nombre"></span><br/>
+        <span id="preview-filas"></span> registros exportados.
       </div>
     </div>
   </div>
 
-  <!-- jsPDF + AutoTable via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -123,8 +143,9 @@
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     function toInputDate(d) { return d.toISOString().split("T")[0]; }
+
     function formatearFecha(ts) {
-      if (!ts) return "—";
+      if (!ts) return "-";
       const f = ts.toDate ? ts.toDate() : new Date(ts);
       return f.toLocaleDateString("es-PA", {
         day: "2-digit", month: "short", year: "numeric",
@@ -132,10 +153,24 @@
       });
     }
 
+    // Fecha legible sin caracteres raros para el PDF
+    function fechaPDF(str) {
+      if (!str) return "-";
+      const d = new Date(str + "T12:00:00");
+      return d.toLocaleDateString("es-PA", { day: "2-digit", month: "long", year: "numeric" });
+    }
+
+    // Acortar URL para notas del PDF (max 60 chars)
+    function acortarURL(url, max = 60) {
+      if (!url) return "-";
+      if (url.length <= max) return url;
+      return url.slice(0, max - 3) + "...";
+    }
+
     // Defaults mes actual
-    const hoy      = new Date();
-    const primero  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    const ultimo   = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    const hoy     = new Date();
+    const primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const ultimo  = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
     document.getElementById("fecha-inicio").value = toInputDate(primero);
     document.getElementById("fecha-fin").value    = toInputDate(ultimo);
 
@@ -155,47 +190,65 @@
     // ── Alertas ───────────────────────────────────────────────────────────────
     const alertaError = document.getElementById("alerta-error");
     const alertaOk    = document.getElementById("alerta-ok");
-    function mostrarError(msg) { alertaError.textContent = msg; alertaError.classList.add("show"); alertaOk.classList.remove("show"); }
-    function mostrarOk(msg)    { alertaOk.textContent = msg;    alertaOk.classList.add("show");    alertaError.classList.remove("show"); }
-    function ocultarAlertas()  { alertaError.classList.remove("show"); alertaOk.classList.remove("show"); }
+    function mostrarError(msg) {
+      alertaError.textContent = msg;
+      alertaError.classList.add("show");
+      alertaOk.classList.remove("show");
+    }
+    function mostrarOk(msg) {
+      alertaOk.textContent = msg;
+      alertaOk.classList.add("show");
+      alertaError.classList.remove("show");
+    }
+    function ocultarAlertas() {
+      alertaError.classList.remove("show");
+      alertaOk.classList.remove("show");
+    }
 
     // ── PDF builder ───────────────────────────────────────────────────────────
-    function crearPDF(titulo, subtitulo, columnas, filas, notasFondos = []) {
+    // IMPORTANTE: jsPDF no soporta emojis ni caracteres especiales como
+    // flechas Unicode. Usar solo ASCII + latin-1 en todo texto del PDF.
+    function crearPDF({ titulo, periodo, columnas, filas, notaTexto = "", notasURL = [] }) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-
-      const verde    = [0, 114, 46];
-      const gris     = [100, 100, 100];
-      const grisSuave = [240, 247, 242];
-      const negro    = [26, 46, 30];
-
       const ancho = doc.internal.pageSize.getWidth();
-      let y = 14;
+      const alto  = doc.internal.pageSize.getHeight();
+
+      const VERDE      = [0, 114, 46];
+      const VERDE_SUAVE = [232, 245, 236];
+      const GRIS       = [100, 100, 100];
+      const GRIS_LINEA = [208, 219, 210];
+      const NEGRO      = [26, 46, 30];
 
       // ── Encabezado ──
-      doc.setFillColor(...verde);
-      doc.rect(0, 0, ancho, 20, "F");
+      doc.setFillColor(...VERDE);
+      doc.rect(0, 0, ancho, 22, "F");
       doc.setTextColor(255, 255, 255);
+      doc.setFontSize(15);
+      doc.setFont("helvetica", "bold");
+      doc.text("CONTECS", 14, 10);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Sistema de Gestion", 14, 16);
+      const fechaHoy = new Date().toLocaleDateString("es-PA", {
+        day: "2-digit", month: "long", year: "numeric"
+      });
+      doc.text("Generado: " + fechaHoy, ancho - 14, 14, { align: "right" });
+
+      // ── Titulo y periodo ──
+      let y = 30;
+      doc.setTextColor(...NEGRO);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text("CONTECS — Sistema de Gestión", 14, 12);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(new Date().toLocaleDateString("es-PA", { day: "2-digit", month: "short", year: "numeric" }), ancho - 14, 12, { align: "right" });
-
-      y = 28;
-      doc.setTextColor(...negro);
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
       doc.text(titulo, 14, y);
-      y += 6;
+      y += 7;
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(...gris);
-      doc.text(subtitulo, 14, y);
-      y += 8;
+      doc.setTextColor(...GRIS);
+      doc.text(periodo, 14, y);
+      y += 6;
 
-      // ── Tabla ──
+      // ── Tabla principal ──
       doc.autoTable({
         startY: y,
         head: [columnas],
@@ -203,55 +256,78 @@
         theme: "grid",
         styles: {
           fontSize: 8,
-          cellPadding: 3,
-          textColor: negro,
-          lineColor: [208, 219, 210],
+          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+          textColor: NEGRO,
+          lineColor: GRIS_LINEA,
           lineWidth: 0.3,
+          overflow: "linebreak",
         },
         headStyles: {
-          fillColor: verde,
+          fillColor: VERDE,
           textColor: [255, 255, 255],
           fontStyle: "bold",
           fontSize: 8,
           halign: "left",
         },
         alternateRowStyles: {
-          fillColor: grisSuave,
+          fillColor: VERDE_SUAVE,
         },
+        columnStyles: {},
         margin: { left: 14, right: 14 },
-        didDrawPage: (data) => {
-          // Pie de página
+        tableWidth: "auto",
+        didDrawPage: () => {
           const totalPags = doc.internal.getNumberOfPages();
           const pag = doc.internal.getCurrentPageInfo().pageNumber;
-          doc.setFontSize(8);
-          doc.setTextColor(...gris);
-          const alto = doc.internal.pageSize.getHeight();
-          doc.text(`Página ${pag} de ${totalPags}`, ancho / 2, alto - 8, { align: "center" });
-          doc.text("CONTECS — Generado automáticamente", 14, alto - 8);
+          doc.setFontSize(7);
+          doc.setTextColor(...GRIS);
+          doc.text("CONTECS - Documento generado automaticamente", 14, alto - 6);
+          doc.text("Pagina " + pag + " de " + totalPags, ancho - 14, alto - 6, { align: "right" });
         },
       });
 
-      // ── Notas al pie (facturas, motivos, etc.) ──
-      if (notasFondos.length > 0) {
-        let finalY = doc.lastAutoTable.finalY + 6;
-        const alto = doc.internal.pageSize.getHeight();
+      // ── Sección de notas al pie ──
+      const todasLasNotas = [];
+      if (notaTexto) todasLasNotas.push(notaTexto);
+      notasURL.forEach((n, i) => {
+        // Separar etiqueta y URL para mostrar URL acortada
+        todasLasNotas.push("Factura " + (i + 1) + ": " + acortarURL(n));
+      });
 
-        if (finalY + notasFondos.length * 5 + 10 > alto - 15) {
+      if (todasLasNotas.length > 0) {
+        const margen       = 14;
+        const anchoCuadro  = ancho - margen * 2;
+        let finalY = doc.lastAutoTable.finalY + 8;
+
+        // Calcular cuántas líneas necesita cada nota con wrapping
+        const lineasPorNota = todasLasNotas.map(nota => {
+          return doc.splitTextToSize("- " + nota, anchoCuadro - 10);
+        });
+        const totalLineas = lineasPorNota.reduce((s, l) => s + l.length, 0);
+        const altoCuadro  = totalLineas * 5 + 12;
+
+        if (finalY + altoCuadro > alto - 14) {
           doc.addPage();
           finalY = 20;
         }
 
-        doc.setFillColor(...grisSuave);
-        doc.setDrawColor(...verde);
-        doc.roundedRect(14, finalY, ancho - 28, notasFondos.length * 5.5 + 8, 2, 2, "FD");
-        doc.setTextColor(...negro);
+        doc.setFillColor(...VERDE_SUAVE);
+        doc.setDrawColor(...VERDE);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(margen, finalY, anchoCuadro, altoCuadro, 2, 2, "FD");
+
         doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
-        doc.text("📎 Notas adicionales:", 18, finalY + 5.5);
+        doc.setTextColor(...NEGRO);
+        doc.text("Notas adicionales:", margen + 4, finalY + 6);
+
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...gris);
-        notasFondos.forEach((nota, i) => {
-          doc.text(`• ${nota}`, 18, finalY + 10 + i * 5.5);
+        doc.setTextColor(...GRIS);
+        let lineY = finalY + 11;
+        lineasPorNota.forEach(lineas => {
+          lineas.forEach(linea => {
+            doc.text(linea, margen + 4, lineY);
+            lineY += 5;
+          });
         });
       }
 
@@ -274,9 +350,10 @@
       if (inicio > fin) { mostrarError("La fecha inicio no puede ser mayor que la fecha fin."); return; }
 
       btnExportar.disabled    = true;
-      btnExportar.textContent = "⏳ Generando PDF...";
+      btnExportar.textContent = "Generando PDF...";
 
-      const periodoLabel = `Período: ${new Date(inicioStr).toLocaleDateString("es-PA", { day:"2-digit", month:"short", year:"numeric" })} → ${new Date(finStr).toLocaleDateString("es-PA", { day:"2-digit", month:"short", year:"numeric" })}`;
+      // Periodo sin caracteres raros (sin flecha Unicode)
+      const periodoLabel = "Periodo: " + fechaPDF(inicioStr) + " al " + fechaPDF(finStr);
 
       try {
         let pdfDoc, nombreArchivo, totalRegistros;
@@ -290,38 +367,46 @@
             orderBy("creadoEn", "asc")
           ));
 
-          const columnas = ["Fecha", "Usuario", "Producto", "Cant.", "P/U", "Subtotal", "Total venta", "Método pago"];
-          const filas = [], notas = [];
+          const columnas = ["Fecha", "Usuario", "Producto", "Cant.", "P/U", "Subtotal", "Total venta"];
+          const filas = [], notasExtra = [];
           let conteo = 0;
 
           snap.forEach(d => {
             const v = d.data();
             const items = v.items || [];
             if (items.length === 0) {
-              filas.push([formatearFecha(v.creadoEn), v.usuarioNombre || "—", "—", "—", "—", "—", formatearMoneda(v.total ?? 0), v.metodoPago || "—"]);
-              conteo++;
+              filas.push([
+                formatearFecha(v.creadoEn), v.usuarioNombre || "-",
+                "-", "-", "-", "-", formatearMoneda(v.total ?? 0)
+              ]);
             } else {
               items.forEach((it, i) => {
                 filas.push([
                   i === 0 ? formatearFecha(v.creadoEn) : "",
-                  i === 0 ? (v.usuarioNombre || "—") : "",
-                  it.nombre || "—",
+                  i === 0 ? (v.usuarioNombre || "-") : "",
+                  it.nombre || "-",
                   String(it.cantidad ?? 0),
                   formatearMoneda(it.precioUnitario ?? 0),
                   formatearMoneda(it.subtotal ?? 0),
                   i === 0 ? formatearMoneda(v.total ?? 0) : "",
-                  i === 0 ? (v.metodoPago || "—") : "",
                 ]);
               });
-              conteo++;
             }
-            if (v.nota) notas.push(`Nota en venta (${formatearFecha(v.creadoEn)}): "${v.nota}"`);
+            if (v.nota) notasExtra.push("Nota (" + formatearFecha(v.creadoEn) + "): " + v.nota);
+            // Mermas dentro del registro de venta
+            if (Array.isArray(v.mermas) && v.mermas.length > 0) {
+              const nombresMerma = v.mermas.map(m => m.nombre + " x" + m.cantidad).join(", ");
+              notasExtra.push("Merma en esta venta: " + nombresMerma + (v.motivoMerma ? " | Motivo: " + v.motivoMerma : ""));
+            }
+            conteo++;
           });
 
-          if (conteo === 0) { mostrarError("No hay ventas en el período seleccionado."); return; }
+          if (conteo === 0) { mostrarError("No hay ventas en el periodo seleccionado."); return; }
           totalRegistros = conteo;
-          pdfDoc = crearPDF("Reporte de Ventas", periodoLabel, columnas, filas, notas);
-          nombreArchivo = `contecs-ventas-${inicioStr}-al-${finStr}.pdf`;
+
+          const notaTexto = "Tabla: fecha, usuario, productos vendidos, cantidades, precios unitarios, subtotales y total de cada venta registrada en el periodo indicado.";
+          pdfDoc = crearPDF({ titulo: "Reporte de Ventas", periodo: periodoLabel, columnas, filas, notaTexto, notasURL: notasExtra });
+          nombreArchivo = "contecs-ventas-" + inicioStr + "-al-" + finStr + ".pdf";
         }
 
         // ════ COMPRAS ════
@@ -333,40 +418,44 @@
             orderBy("creadoEn", "asc")
           ));
 
-          const columnas = ["Fecha", "Usuario", "Proveedor", "Producto", "Cant.", "P/U", "Subtotal", "Total compra", "Método pago"];
-          const filas = [], notas = [];
+          const columnas = ["Fecha", "Usuario", "Proveedor", "Producto", "Cant.", "P/U", "Subtotal", "Total compra"];
+          const filas = [], urlsFactura = [];
           let conteo = 0;
 
-          snap.forEach(d => {
+          snap.forEach((d, idx) => {
             const c = d.data();
             const items = c.items || [];
             if (items.length === 0) {
-              filas.push([formatearFecha(c.creadoEn), c.usuarioNombre || "—", c.proveedor || "—", "—", "—", "—", "—", formatearMoneda(c.total ?? 0), c.metodoPago || "—"]);
-              conteo++;
+              filas.push([
+                formatearFecha(c.creadoEn), c.usuarioNombre || "-",
+                c.proveedor || "-", "-", "-", "-", "-", formatearMoneda(c.total ?? 0)
+              ]);
             } else {
               items.forEach((it, i) => {
                 filas.push([
                   i === 0 ? formatearFecha(c.creadoEn) : "",
-                  i === 0 ? (c.usuarioNombre || "—") : "",
-                  i === 0 ? (c.proveedor || "—") : "",
-                  it.nombre || "—",
+                  i === 0 ? (c.usuarioNombre || "-") : "",
+                  i === 0 ? (c.proveedor || "-") : "",
+                  it.nombre || "-",
                   String(it.cantidad ?? 0),
                   formatearMoneda(it.precioUnitario ?? 0),
                   formatearMoneda(it.subtotal ?? 0),
                   i === 0 ? formatearMoneda(c.total ?? 0) : "",
-                  i === 0 ? (c.metodoPago || "—") : "",
                 ]);
               });
-              conteo++;
             }
-            if (c.nota) notas.push(`Nota en compra (${formatearFecha(c.creadoEn)}): "${c.nota}"`);
-            if (c.factura?.url) notas.push(`Factura de compra ${formatearFecha(c.creadoEn)} (prov. ${c.proveedor || "—"}): ${c.factura.url}`);
+            if (c.factura?.url) {
+              urlsFactura.push(c.factura.url);
+            }
+            conteo++;
           });
 
-          if (conteo === 0) { mostrarError("No hay compras en el período seleccionado."); return; }
+          if (conteo === 0) { mostrarError("No hay compras en el periodo seleccionado."); return; }
           totalRegistros = conteo;
-          pdfDoc = crearPDF("Reporte de Compras", periodoLabel, columnas, filas, notas);
-          nombreArchivo = `contecs-compras-${inicioStr}-al-${finStr}.pdf`;
+
+          const notaTexto = "Tabla: fecha, usuario, proveedor, productos comprados, cantidades, precios y total de cada compra. Las URLs de facturas adjuntas aparecen a continuacion.";
+          pdfDoc = crearPDF({ titulo: "Reporte de Compras", periodo: periodoLabel, columnas, filas, notaTexto, notasURL: urlsFactura });
+          nombreArchivo = "contecs-compras-" + inicioStr + "-al-" + finStr + ".pdf";
         }
 
         // ════ INVENTARIO ════
@@ -382,91 +471,100 @@
           const filas = [];
           let conteo = 0;
 
+          const origenMap = { venta: "Venta", compra: "Compra", ajuste: "Ajuste", merma: "Merma" };
+
           snap.forEach(d => {
             const m = d.data();
-            const origenMap = { venta: "Venta", compra: "Compra", ajuste: "Ajuste", merma: "Merma" };
+            // Sin flechas ni simbolos — solo texto plano
+            const tipoTexto = m.tipo === "entrada" ? "Entrada" : "Salida";
             filas.push([
               formatearFecha(m.creadoEn),
-              m.tipo === "entrada" ? "Entrada ▲" : "Salida ▼",
-              m.nombre || "—",
+              tipoTexto,
+              m.nombre || "-",
               String(m.cantidad ?? 0),
-              String(m.antes ?? "?"),
-              String(m.despues ?? "?"),
-              origenMap[m.origen] || m.origen || "—",
-              m.motivo || "—",
+              String(m.antes ?? "-"),
+              String(m.despues ?? "-"),
+              origenMap[m.origen] || m.origen || "-",
+              m.motivo || "-",
             ]);
             conteo++;
           });
 
-          if (conteo === 0) { mostrarError("No hay movimientos de inventario en el período."); return; }
+          if (conteo === 0) { mostrarError("No hay movimientos de inventario en el periodo."); return; }
           totalRegistros = conteo;
 
-          const nota = ["Este reporte muestra todos los movimientos de stock del período. "
-            + "\"Entrada\" = producto que ingresó al inventario. \"Salida\" = producto que salió. "
-            + "Stock anterior y posterior reflejan el estado del producto en ese momento exacto."];
+          const notaTexto =
+            "Tabla de movimientos de inventario. " +
+            "Tipo Entrada: producto que ingreso al stock (compra o ajuste). " +
+            "Tipo Salida: producto que salio del stock (venta, merma o ajuste). " +
+            "Stock anterior y posterior muestran el estado exacto del producto en ese momento.";
 
-          pdfDoc = crearPDF("Reporte de Inventario", periodoLabel, columnas, filas, nota);
-          nombreArchivo = `contecs-inventario-${inicioStr}-al-${finStr}.pdf`;
+          pdfDoc = crearPDF({ titulo: "Reporte de Inventario", periodo: periodoLabel, columnas, filas, notaTexto });
+          nombreArchivo = "contecs-inventario-" + inicioStr + "-al-" + finStr + ".pdf";
         }
 
-        // ════ MERMAS ════
-        else if (tipoSeleccionado === "mermas") {
+        // ════ FONDOS ════
+        else if (tipoSeleccionado === "fondos") {
           const snap = await getDocs(query(
-            collection(db, "mermas"),
+            collection(db, "fondos_entrada"),
             where("creadoEn", ">=", inicio),
             where("creadoEn", "<=", fin),
             orderBy("creadoEn", "asc")
           ));
 
-          const columnas = ["Fecha", "Usuario", "Producto", "Cantidad mermada", "Motivo"];
+          const columnas = ["Fecha", "Tipo", "Titulo", "Descripcion", "Usuario", "Monto"];
           const filas = [];
-          let conteo = 0;
+          let conteo = 0, totalIngresos = 0, totalEgresos = 0;
 
           snap.forEach(d => {
-            const m = d.data();
-            const items = m.items || [];
-            if (items.length === 0) {
-              filas.push([formatearFecha(m.creadoEn), m.usuarioNombre || "—", "—", "—", m.motivo || "—"]);
-              conteo++;
-            } else {
-              items.forEach((it, i) => {
-                filas.push([
-                  i === 0 ? formatearFecha(m.creadoEn) : "",
-                  i === 0 ? (m.usuarioNombre || "—") : "",
-                  it.nombre || "—",
-                  String(it.cantidad ?? 0),
-                  i === 0 ? (m.motivo || "—") : "",
-                ]);
-              });
-              conteo++;
-            }
+            const f = d.data();
+            const tipo = f.tipo === "ingreso" ? "Ingreso" : "Egreso";
+            const monto = f.monto ?? 0;
+            if (f.tipo === "ingreso") totalIngresos += monto;
+            else                      totalEgresos  += monto;
+
+            filas.push([
+              formatearFecha(f.creadoEn),
+              tipo,
+              f.titulo || "-",
+              f.descripcion || "-",
+              f.usuarioNombre || "-",
+              formatearMoneda(monto),
+            ]);
+            conteo++;
           });
 
-          if (conteo === 0) { mostrarError("No hay mermas en el período seleccionado."); return; }
+          if (conteo === 0) { mostrarError("No hay movimientos de fondos en el periodo."); return; }
           totalRegistros = conteo;
 
-          const nota = ["Las mermas son pérdidas de producto que NO generan ingreso de fondos. "
-            + "El inventario se descuenta automáticamente al registrar una merma. "
-            + "Cada registro incluye el motivo de la pérdida indicado por el usuario."];
+          // Agregar fila de totales al final
+          filas.push(["", "", "", "", "TOTAL INGRESOS", formatearMoneda(totalIngresos)]);
+          filas.push(["", "", "", "", "TOTAL EGRESOS",  formatearMoneda(totalEgresos)]);
+          filas.push(["", "", "", "", "BALANCE NETO",   formatearMoneda(totalIngresos - totalEgresos)]);
 
-          pdfDoc = crearPDF("Reporte de Mermas", periodoLabel, columnas, filas, nota);
-          nombreArchivo = `contecs-mermas-${inicioStr}-al-${finStr}.pdf`;
+          const notaTexto =
+            "Tabla de movimientos de fondos del periodo. " +
+            "Ingreso: dinero que entro al fondo (ventas, donaciones, etc). " +
+            "Egreso: dinero que salio del fondo (compras, gastos, etc). " +
+            "Al final de la tabla se muestran los totales y el balance neto del periodo.";
+
+          pdfDoc = crearPDF({ titulo: "Movimientos de Fondos", periodo: periodoLabel, columnas, filas, notaTexto });
+          nombreArchivo = "contecs-fondos-" + inicioStr + "-al-" + finStr + ".pdf";
         }
 
-        // ── Descargar ──
         pdfDoc.save(nombreArchivo);
-
         document.getElementById("preview-nombre").textContent = nombreArchivo;
-        document.getElementById("preview-filas").textContent  = `${totalRegistros} registro${totalRegistros > 1 ? "s" : ""}`;
+        document.getElementById("preview-filas").textContent  =
+          totalRegistros + " registro" + (totalRegistros !== 1 ? "s" : "");
         document.getElementById("preview-card").classList.add("show");
-        mostrarOk(`✅ PDF generado con ${totalRegistros} registro${totalRegistros > 1 ? "s" : ""}. Revisa tus descargas.`);
+        mostrarOk("PDF generado con " + totalRegistros + " registro" + (totalRegistros !== 1 ? "s" : "") + ". Revisa tus descargas.");
 
       } catch (err) {
         console.error("Exportar PDF:", err);
         mostrarError("Error al generar el PDF: " + err.message);
       } finally {
         btnExportar.disabled    = false;
-        btnExportar.textContent = "⬇️ Exportar PDF";
+        btnExportar.textContent = "Exportar PDF";
       }
     });
   </script>

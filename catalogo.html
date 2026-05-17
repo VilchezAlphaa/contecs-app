@@ -2,10 +2,34 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>CONTECS — Catálogo</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
+    /* ── Botón de volver estético ── */
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.55);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      text-decoration: none;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.32);
+      border-color: #fff;
+      transform: scale(1.08);
+    }
     /* ── TABS ── */
     .tabs {
       display: flex;
@@ -110,7 +134,8 @@
     .stock-ok     { background: var(--verde-fondo);    color: var(--verde-oscuro); }
     .stock-alerta { background: var(--amarillo-fondo); color: var(--amarillo); }
     .stock-agotado{ background: var(--rojo-fondo);     color: var(--rojo); }
-    .prod-inactivo { opacity: 0.45; }
+    .prod-inactivo { opacity: 0.45; filter: grayscale(50%); }
+    .prod-inactivo .btn-icon { opacity: 1 !important; filter: none !important; }
 
     /* Sección agotados */
     .agotados-titulo {
@@ -203,12 +228,22 @@
     }
     .empty-state .emoji { font-size: 40px; margin-bottom: 8px; }
     .empty-state p { font-size: 14px; }
+  
+    .prod-card.inactivo {
+      opacity: 0.45;
+      filter: grayscale(60%);
+    }
+    .prod-card.inactivo .btn-icon,
+    .prod-card.inactivo button {
+      opacity: 1 !important;
+      filter: none !important;
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
     <h1>Catálogo</h1>
-    <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
+    <a href="dashboard.html" class="btn-volver" title="Volver">&#8592;</a>
   </div>
 
   <div class="container">
@@ -250,7 +285,7 @@
 
       <div id="productos-contenido">
         <div class="empty-state">
-          <div class="emoji">☝️</div>
+          <div class="emoji" style="font-size:36px;color:var(--gris-medio);">&#8595;</div>
           <p>Selecciona una categoría para ver sus productos.</p>
         </div>
       </div>
@@ -545,7 +580,7 @@
       const contenido = document.getElementById("productos-contenido");
 
       if (!catId) {
-        contenido.innerHTML = `<div class="empty-state"><div class="emoji">☝️</div><p>Selecciona una categoría.</p></div>`;
+        contenido.innerHTML = `<div class="empty-state"><div class="emoji" style="font-size:36px;color:var(--gris-medio);">&#8595;</div><p>Selecciona una categoría para ver sus productos.</p></div>`;
         return;
       }
 

@@ -6,6 +6,30 @@
   <title>CONTECS — Inventario</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
+    /* ── Botón de volver estético ── */
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.55);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      text-decoration: none;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.32);
+      border-color: #fff;
+      transform: scale(1.08);
+    }
     /* ── RESUMEN DE ALERTAS ── */
     .alertas-bar {
       display: grid;
@@ -173,7 +197,7 @@
 <body>
   <div class="topbar">
     <h1>Inventario</h1>
-    <a href="dashboard.html" style="color:#fff;font-size:13px;">← Volver</a>
+    <a href="dashboard.html" class="btn-volver" title="Volver">&#8592;</a>
   </div>
 
   <div class="container">
@@ -186,17 +210,16 @@
       </div>
       <div class="alerta-stat">
         <div class="num num-alerta" id="stat-alerta">—</div>
-        <div class="lbl">⚠️ Bajo</div>
+        <div class="lbl">Bajo</div>
       </div>
       <div class="alerta-stat">
         <div class="num num-agotado" id="stat-agotado">—</div>
-        <div class="lbl">🔴 Agotado</div>
+        <div class="lbl">Agotado</div>
       </div>
     </div>
 
     <!-- Buscador -->
     <div class="buscador-wrap">
-      <span class="icono-buscar">🔍</span>
       <input type="text" id="buscador" placeholder="Buscar producto..."/>
     </div>
 
@@ -273,7 +296,7 @@
         const banner = document.createElement("div");
         banner.className = "agotados-banner";
         banner.innerHTML = `
-          <div class="agotados-banner-titulo">🔴 Productos agotados (${agotados.length})</div>
+          <div class="agotados-banner-titulo">Productos agotados (${agotados.length})</div>
           ${agotados.map(p => `
             <div class="agotado-item">
               <span style="font-size:20px;">${getEmoji(p.iconoId)}</span>
@@ -334,7 +357,7 @@
               ${estado === "agotado"
                 ? '<span class="inv-badge-agotado">Sin stock</span>'
                 : estado === "alerta"
-                  ? `⚠️ Mínimo: ${prod.alertaMinima}`
+                  ? `Mínimo: ${prod.alertaMinima}`
                   : `Mínimo: ${prod.alertaMinima}`}
             </div>`;
 
@@ -349,7 +372,7 @@
       if (totalVisible === 0) {
         contenido.innerHTML += `
           <div class="empty-state">
-            <div class="emoji">${busq ? "🔍" : "📦"}</div>
+            <div class="emoji">${busq ? "📦" : "📦"}</div>
             <p>${busq
               ? `No se encontraron productos con "${terminoBusqueda}".`
               : "No hay productos en el inventario aún.<br>Crea categorías y productos en el Catálogo."}</p>

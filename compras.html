@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>CONTECS — Compras</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <style>
@@ -89,6 +89,27 @@
     .chip-danger { border-color: rgba(192,57,43,0.25); color: var(--rojo); }
     .seccion-cat { margin-bottom: 18px; }
     .seccion-cat-titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--verde-oscuro); margin-bottom: 10px; }
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: var(--blanco);
+      transition: background 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    .btn-volver:hover  { background: rgba(255,255,255,0.28); }
+    .btn-volver:active { transform: scale(0.92); }
+    .campo-error {
+      display: none;
+      color: var(--rojo);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .campo-error.show { display: block; }
     @media (min-width: 680px) {
       .venta-grid, .ajuste-grid { grid-template-columns: 1fr 1fr; }
       .panel-resumen { grid-template-columns: 1fr 1fr; }
@@ -98,7 +119,7 @@
 <body>
   <div class="topbar">
     <h1>Compras</h1>
-    <a href="dashboard.html" class="topbar-link">← Volver</a>
+    <a href="dashboard.html" class="btn-volver" title="Volver"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></a>
   </div>
   <div class="container">
     <div class="alerta alerta-error" id="alerta-compra"></div>
@@ -134,6 +155,7 @@
         <div class="form-group">
           <label>Proveedor</label>
           <input type="text" id="proveedor-compra" placeholder="Ej: PriceSmart" required/>
+          <span class="campo-error" id="err-proveedor"></span>
         </div>
         <div id="carrito-compra-wrap"></div>
         <div class="form-group">
@@ -143,6 +165,7 @@
             <option value="efectivo">Efectivo</option>
             <option value="transferencia">Transferencia</option>
           </select>
+          <span class="campo-error" id="err-metodo"></span>
         </div>
         <div class="form-group">
           <label for="factura-compra">Factura</label>
@@ -153,6 +176,8 @@
               <div class="factura-preview-info">No hay factura seleccionada.</div>
             </div>
           </div>
+        </div>
+          <span class="campo-error" id="err-factura"></span>
         </div>
         <div class="form-group">
           <label>Nota</label>
