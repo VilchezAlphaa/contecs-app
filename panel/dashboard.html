@@ -8,12 +8,12 @@
   <style>
     /* ══════════ ZONA A — HEADER ══════════ */
     .header-a {
-      background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde) 100%);
+      background: var(--verde-oscuro);
       color: var(--blanco);
       border-radius: var(--radio-lg);
-      padding: 22px 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 8px 28px rgba(4,82,35,0.30);
+      padding: 28px 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--sombra-lg);
       position: relative;
       overflow: hidden;
       animation: fadeScaleIn 0.5s var(--ease-spring) both;
@@ -78,10 +78,9 @@
     }
     .widget-card {
       background: #fff;
-      border-radius: 12px;
+      border-radius: var(--radio);
       padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border-left: 3px solid var(--verde-claro);
+      box-shadow: var(--sombra-sm);
       animation: cardCascade 0.45s var(--ease-spring) both;
     }
     .widget-card:nth-child(1) { animation-delay: 0.10s; }
@@ -99,11 +98,10 @@
       background: #fff;
       border-radius: var(--radio-sm);
       padding: 12px 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow: var(--sombra-sm);
       display: flex;
       align-items: center;
       gap: 12px;
-      border-left: 3px solid var(--verde-claro);
       animation: cardCascade 0.4s var(--ease-spring) both;
     }
     .evento-item .evt-icono { font-size: 20px; }
@@ -552,6 +550,63 @@
     }
 
     document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
+
+    // ══════════ Sensación premium al hacer scroll ══════════
+    // 1) Topbar: sombra/blur se intensifican solo cuando hay contenido debajo
+    // 2) Header (Zona A): parallax sutil, se mueve más lento que el resto
+    const topbarEl = document.querySelector(".topbar");
+    const headerAEl = document.querySelector(".header-a");
+    // La animación de entrada (fadeScaleIn) usa fill-mode "both", que retiene
+    // el transform para siempre. La liberamos al terminar para que el
+    // parallax por scroll (más abajo) pueda tomar el control de esa propiedad.
+    if (headerAEl) {
+      headerAEl.addEventListener("animationend", () => {
+        headerAEl.style.animation = "none";
+      }, { once: true });
+    }
+    let tickingScroll = false;
+
+    function onScrollFrame() {
+      const y = window.scrollY;
+      if (topbarEl) topbarEl.classList.toggle("is-scrolled", y > 8);
+      if (headerAEl) headerAEl.style.transform = `translateY(${y * -0.15}px)`;
+      tickingScroll = false;
+    }
+    window.addEventListener("scroll", () => {
+      if (!tickingScroll) {
+        requestAnimationFrame(onScrollFrame);
+        tickingScroll = true;
+      }
+    }, { passive: true });
+
+    // 3) Scroll-reveal: los bloques de eventos y módulos aparecen al
+    // entrar en pantalla, en vez de estar todos animados desde la carga.
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    function observarReveal(selector) {
+      document.querySelectorAll(selector).forEach(el => {
+        if (!el.classList.contains("reveal-on-scroll")) {
+          el.classList.add("reveal-on-scroll");
+          revealObserver.observe(el);
+        }
+      });
+    }
+
+    // Los bloques de categorías y eventos se crean de forma asíncrona;
+    // un MutationObserver los detecta apenas se insertan en el DOM.
+    const contenedorPrincipal = document.getElementById("contenido-principal");
+    if (contenedorPrincipal) {
+      new MutationObserver(() => {
+        observarReveal(".categoria-bloque");
+      }).observe(contenedorPrincipal, { childList: true, subtree: true });
+    }
   </script>
 </body>
 </html>
