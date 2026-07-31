@@ -38,14 +38,18 @@
       font-size: 12px;
       font-weight: 600;
     }
-    .nivel-pill {
-      display: inline-block;
-      background: rgba(57,181,74,0.3);
-      border: 1px solid rgba(57,181,74,0.4);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
+    .badge-verificado {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--blanco);
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      flex-shrink: 0;
     }
+    .badge-verificado svg { width: 13px; height: 13px; display: block; }
     .cuenta-regresiva {
       margin-top: 14px;
       padding-top: 14px;
@@ -472,7 +476,11 @@
       <div class="subtitulo-espacio">Tu espacio CONTECS</div>
       <div class="pills">
         <span class="rol-pill"  id="rol-label">...</span>
-        <span class="nivel-pill" id="nivel-label"></span>
+        <span class="badge-verificado" id="badge-verificado" title="Cuenta verificada">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 12.5L9.5 18L20 6" stroke="#39b54a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
       </div>
       <div class="cuenta-regresiva" id="cuenta-regresiva-wrap">
         <span class="cr-label">CONTECS 2026 en</span>
@@ -495,7 +503,7 @@
   </div>
 
   <script type="module">
-    import { guardRoute, getUsuarioActual, cerrarSesion } from "../js/core/auth.js";
+    import { guardRoute, esperarSesionLista, getUsuarioActual, cerrarSesion } from "../js/core/auth.js";
     import { tienePermiso, infoRol } from "../js/core/permisos.js";
     import { usuarioPuedeVerReunion } from "../js/modulos/reuniones-utils.js";
     import { formatearMoneda } from "../js/core/operaciones.js";
@@ -513,6 +521,7 @@
     }
 
     guardRoute();
+    await esperarSesionLista();
 
     const usuario = getUsuarioActual();
     const rol     = usuario.rol || "sin_rol";
@@ -520,7 +529,6 @@
 
     document.getElementById("nombre-usuario").textContent = usuario.nombre || "Usuario";
     document.getElementById("rol-label").textContent      = info.label || "Sin rol";
-    document.getElementById("nivel-label").textContent    = info.nivel ? `Nivel ${info.nivel}` : "";
 
     // ── Cuenta regresiva al evento (19 de octubre de 2026) — siempre visible en Zona A ──
     const calcularCuentaRegresiva = () => {

@@ -1,29 +1,23 @@
 // =============================================
 // CONTECS — Sistema de Roles y Permisos
 // =============================================
-// Niveles de autoridad:
-// 5 = Máxima autoridad
-// 4 = Autoridad alta
-// 3 = Autoridad media
-// 2 = Autoridad baja-media
-// 1 = Mínima autoridad
 
 export const ROLES = {
-  ceo:            { label: "CEO / Desarrollador",    nivel: 6, color: "#1a1a2e" },
-  junta:          { label: "Junta Directiva",        nivel: 5, color: "#6C3483" },
-  junta_principal: { label: "Junta Directiva_A",    nivel: 6, color: "#1a1a2e" },
-  coordinador:    { label: "Coordinador",            nivel: 5, color: "#6C3483" },
-  finanzas:       { label: "Líder de Finanzas",      nivel: 5, color: "#6C3483" },
-  logistica:      { label: "Líder de Logística",     nivel: 5, color: "#6C3483" },
-  ventas:         { label: "Líder de Ventas",        nivel: 4, color: "#1A5276" },
-  secretario:     { label: "Secretario",             nivel: 4, color: "#1A5276" },
-  actividades:    { label: "Líder de Actividades",   nivel: 3, color: "#1E8449" },
-  patrocinios:    { label: "Líder de Patrocinios",   nivel: 3, color: "#1E8449" },
-  investigacion:  { label: "Líder de Investigación", nivel: 3, color: "#1E8449" },
-  voluntariado:   { label: "Líder de Voluntariado",  nivel: 3, color: "#1E8449" },
-  giras:          { label: "Líder de Giras",         nivel: 3, color: "#1E8449" },
-  comunicaciones: { label: "Líder de Comunicaciones",nivel: 2, color: "#B7950B" },
-  miembro:        { label: "Miembro General",        nivel: 1, color: "#717D7E" },
+  ceo:            { label: "CEO / Desarrollador",    color: "#1a1a2e" },
+  junta:          { label: "Junta Directiva",        color: "#6C3483" },
+  junta_principal: { label: "Junta Directiva_A",     color: "#1a1a2e" },
+  coordinador:    { label: "Coordinador",            color: "#6C3483" },
+  finanzas:       { label: "Líder de Finanzas",      color: "#6C3483" },
+  logistica:      { label: "Líder de Logística",     color: "#6C3483" },
+  ventas:         { label: "Líder de Ventas",        color: "#1A5276" },
+  secretario:     { label: "Secretario",             color: "#1A5276" },
+  actividades:    { label: "Líder de Actividades",   color: "#1E8449" },
+  patrocinios:    { label: "Líder de Patrocinios",   color: "#1E8449" },
+  investigacion:  { label: "Líder de Investigación", color: "#1E8449" },
+  voluntariado:   { label: "Líder de Voluntariado",  color: "#1E8449" },
+  giras:          { label: "Líder de Giras",         color: "#1E8449" },
+  comunicaciones: { label: "Líder de Comunicaciones",color: "#B7950B" },
+  miembro:        { label: "Miembro General",        color: "#717D7E" },
 };
 
 // Permisos por módulo
@@ -75,5 +69,5 @@ export function permisosDeRol(rol) {
 
 // Función para obtener info del rol
 export function infoRol(rol) {
-  return ROLES[rol] || { label: rol, nivel: 0, color: "#717D7E" };
+  return ROLES[rol] || { label: rol, color: "#717D7E" };
 }
