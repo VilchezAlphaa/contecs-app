@@ -19,17 +19,6 @@
       animation: fadeScaleIn 0.5s var(--ease-spring) both;
       animation-delay: 0.05s;
     }
-    .header-a::after {
-      content: '';
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 72px;
-      height: 72px;
-      background: url('../logocontecsheader.png') center/contain no-repeat;
-      opacity: 0.16;
-    }
     .header-a .saludo { font-size: 13px; opacity: 0.8; }
     .header-a .nombre { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
     .header-a .subtitulo-espacio {
@@ -310,9 +299,47 @@
     body.sheet-open { overflow: hidden; }
 
     /* ══════════════════════════════════════════════════════
-       VERSIÓN ESCRITORIO (≥1024px) — topbar con tabs + mega-menú
+       TOPBAR — ahora verde, con el logo y (en escritorio) las
+       opciones de categoría integradas como dropdowns al pasar
+       el mouse. Ya no existe una segunda barra blanca debajo.
        ══════════════════════════════════════════════════════ */
-    .topbar-nav, .megamenu, .megamenu-backdrop { display: none; }
+    .topbar {
+      background: var(--verde-oscuro) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-bottom: none !important;
+      color: var(--blanco) !important;
+      position: relative; /* ancla para los dropdowns de .tab-dropdown */
+      z-index: 200;
+    }
+    .topbar.is-scrolled {
+      background: var(--verde-oscuro) !important;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18) !important;
+    }
+    .topbar h1 { color: var(--blanco) !important; }
+
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo {
+      height: 26px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .btn-menu span { background: var(--blanco); }
+    .btn-menu:hover { background: rgba(255,255,255,0.12); }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--blanco);
+    }
+    .btn-logout:hover  { background: rgba(255,255,255,0.24); }
+
+    /* Tabs — ocultas en mobile, viven en el ☰ (bottom sheet) */
+    .topbar-nav { display: none; }
 
     @media (min-width: 1024px) {
       /* El ☰ y el bottom sheet son cosa de mobile */
@@ -320,89 +347,87 @@
 
       body { background: var(--gris-suave); }
 
-      .topbar { padding: 14px 40px; }
+      .topbar {
+        padding: 0 40px;
+        display: flex;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 4px;
+      }
+      .topbar-brand { padding: 14px 0; }
+      .topbar-logo { height: 32px; }
+      .topbar-right { padding: 14px 0; margin-left: auto; }
 
-      /* ── Tabs horizontales de categorías ── */
+      /* ── Tabs de categoría, integradas en la propia barra verde ── */
       .topbar-nav {
         display: flex;
-        gap: 4px;
-        padding: 0 36px;
-        background: rgba(250, 250, 250, 0.92);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-bottom: 1px solid var(--gris-borde);
-        position: sticky;
-        top: 61px;
-        z-index: 99;
+        align-items: stretch;
+        gap: 2px;
+        margin-left: 12px;
       }
-      .topbar-nav .tab-btn {
+      .tab-wrap { position: relative; display: flex; align-items: stretch; }
+      .tab-btn {
         border: none;
         background: transparent;
-        padding: 12px 16px;
+        padding: 0 16px;
         font-size: 14px;
         font-weight: 500;
-        color: var(--gris-texto-sec);
+        color: rgba(255,255,255,0.75);
         cursor: pointer;
-        border-radius: var(--radio-sm) var(--radio-sm) 0 0;
-        transition: color 0.15s, background 0.15s;
-        position: relative;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s var(--ease-out), background 0.2s var(--ease-out);
       }
-      .topbar-nav .tab-btn:hover { color: var(--gris-texto); background: rgba(0,0,0,0.03); }
-      .topbar-nav .tab-btn.tab-activo {
-        color: var(--verde-apagado);
-        background: var(--verde-apagado-bg);
-        font-weight: 600;
-      }
-      .topbar-nav .tab-btn.tab-activo::after {
-        content: "";
-        position: absolute;
-        left: 12px; right: 12px; bottom: 0;
-        height: 2px;
-        background: var(--verde-apagado);
-        border-radius: 2px 2px 0 0;
+      .tab-wrap:hover .tab-btn,
+      .tab-wrap:focus-within .tab-btn {
+        color: var(--blanco);
+        background: rgba(255,255,255,0.1);
       }
 
-      /* ── Mega-menú: franja que se despliega debajo de las tabs ── */
-      .megamenu-backdrop {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.02);
-        z-index: 97;
-      }
-      .megamenu {
-        position: sticky;
-        top: 109px;
-        background: var(--blanco);
-        border-bottom: 1px solid var(--gris-borde);
-        box-shadow: var(--sombra-md);
-        z-index: 98;
+      /* ── Dropdown por categoría: se despliega pegado al topbar,
+         mismo tono verde, letras blancas, sin separación visual ── */
+      .tab-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 220px;
+        background: var(--verde-oscuro);
+        border-radius: 0 0 var(--radio) var(--radio);
+        box-shadow: var(--sombra-lg);
         max-height: 0;
+        opacity: 0;
         overflow: hidden;
-        transition: max-height 0.32s var(--ease-out);
+        pointer-events: none;
+        transform: translateY(-6px);
+        padding: 0 8px;
+        transition:
+          max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 0.28s ease-out,
+          transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+          padding 0.45s cubic-bezier(0.16, 1, 0.3, 1);
       }
-      .megamenu.is-open { max-height: 220px; }
-      .megamenu-inner {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 20px 40px;
-        max-width: 1200px;
+      .tab-wrap:hover .tab-dropdown,
+      .tab-wrap:focus-within .tab-dropdown {
+        max-height: 420px;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        padding: 8px;
       }
-      .megamenu .modulo-btn {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 12px 16px;
+      .tab-dropdown .modulo-btn {
+        display: block;
+        padding: 11px 14px;
         border: none;
         border-radius: var(--radio-sm);
         text-decoration: none;
-        color: var(--gris-texto);
-        min-width: 140px;
+        color: var(--blanco);
+        white-space: nowrap;
         opacity: 1;
         animation: none;
-        transition: background 0.15s, transform 0.15s;
+        transition: background 0.15s var(--ease-out);
       }
-      .megamenu .modulo-btn:hover { background: var(--verde-apagado-bg); transform: translateY(-1px); }
-      .megamenu .modulo-btn .label { font-size: 14px; font-weight: 600; }
+      .tab-dropdown .modulo-btn:hover { background: rgba(255,255,255,0.14); }
+      .tab-dropdown .modulo-btn .label { font-size: 14px; font-weight: 500; }
 
       /* Contenido principal: ancho fluido, aprovecha la pantalla */
       .container {
@@ -423,19 +448,21 @@
 
 <body>
   <div class="topbar">
-    <h1>CONTECS</h1>
-    <div style="display:flex; align-items:center; gap:10px;">
+    <div class="topbar-brand">
+      <h1>CONTECS</h1>
+      <img class="topbar-logo" src="../logocontecsheader.png" alt="CONTECS" />
+    </div>
+
+    <!-- Tabs de categorías — desktop, se despliegan al pasar el mouse -->
+    <nav class="topbar-nav" id="topbar-nav"></nav>
+
+    <div class="topbar-right">
       <button class="btn-menu" id="btn-menu" aria-label="Abrir módulos" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
       <button class="btn-logout" id="btn-logout">Salir</button>
     </div>
   </div>
-
-  <!-- Tabs de categorías — desktop, reemplaza al sidebar -->
-  <nav class="topbar-nav" id="topbar-nav"></nav>
-  <div class="megamenu-backdrop" id="megamenu-backdrop"></div>
-  <div class="megamenu" id="megamenu"></div>
 
   <div class="container" id="main-container">
     <!-- ZONA A — Header -->
@@ -833,42 +860,38 @@
         document.getElementById("btn-menu").style.display = "none";
       }
 
-      // ══════════ Desktop — topbar-nav (tabs) + mega-menú ══════════
+      // ══════════ Desktop — topbar-nav (tabs con dropdown al hover) ══════════
+      // El despliegue lo controla el CSS (:hover / :focus-within sobre
+      // .tab-wrap), así que no depende de listeners de click que puedan
+      // fallar: basta con pasar el mouse por la pestaña.
       const topbarNav = document.getElementById("topbar-nav");
-      const megamenu  = document.getElementById("megamenu");
-      const megamenuBackdrop = document.getElementById("megamenu-backdrop");
-      let tabActivo = null;
-
-      function cerrarMegamenu() {
-        megamenu.classList.remove("is-open");
-        megamenuBackdrop.style.display = "none";
-        topbarNav.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("tab-activo"));
-        tabActivo = null;
-      }
-
-      function abrirMegamenu(cat, tabBtn) {
-        megamenu.innerHTML = `<div class="megamenu-inner">${
-          cat.modulos.map(m => `<a href="${m.href}" class="modulo-btn"><span class="label">${m.label}</span></a>`).join("")
-        }</div>`;
-        megamenu.classList.add("is-open");
-        megamenuBackdrop.style.display = "block";
-        topbarNav.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("tab-activo"));
-        tabBtn.classList.add("tab-activo");
-        tabActivo = cat.id;
-      }
 
       categoriasVisibles.forEach(cat => {
+        const wrap = document.createElement("div");
+        wrap.className = "tab-wrap";
+
         const tab = document.createElement("button");
+        tab.type = "button";
         tab.className = "tab-btn";
         tab.textContent = cat.label;
-        tab.addEventListener("click", () => {
-          if (tabActivo === cat.id) { cerrarMegamenu(); }
-          else { abrirMegamenu(cat, tab); }
-        });
-        topbarNav.appendChild(tab);
+        tab.setAttribute("aria-haspopup", "true");
+        tab.setAttribute("aria-expanded", "false");
+        wrap.appendChild(tab);
+
+        const dropdown = document.createElement("div");
+        dropdown.className = "tab-dropdown";
+        dropdown.innerHTML = cat.modulos
+          .map(m => `<a href="${m.href}" class="modulo-btn"><span class="label">${m.label}</span></a>`)
+          .join("");
+        wrap.appendChild(dropdown);
+
+        // Mantiene aria-expanded sincronizado para accesibilidad,
+        // sin que el despliegue visual dependa de esto.
+        wrap.addEventListener("mouseenter", () => tab.setAttribute("aria-expanded", "true"));
+        wrap.addEventListener("mouseleave", () => tab.setAttribute("aria-expanded", "false"));
+
+        topbarNav.appendChild(wrap);
       });
-      megamenuBackdrop.addEventListener("click", cerrarMegamenu);
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrarMegamenu(); });
     }
 
     document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
