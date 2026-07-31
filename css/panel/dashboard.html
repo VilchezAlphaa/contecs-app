@@ -6,14 +6,146 @@
   <title>CONTECS — Panel Principal</title>
   <link rel="stylesheet" href="../css/styles.css"/>
   <style>
+    /* ══════════ TOPBAR-NAV — Tabs por categoría + mega-menú ══════════
+       Reglas de separación (Problema 1):
+       - El borde inferior pertenece ÚNICAMENTE a .topbar-nav (border-bottom).
+       - .topbar (verde) no tiene borde ni box-shadow con color: ver css/styles.css.
+       - .topbar-nav tiene background sólido (blanco), así que nada de detrás
+         puede "sangrar" a través de él.
+       - top se calcula en JS con la altura real de .topbar (ajustarOffsetNav),
+         no con un valor estimado a mano.
+       - overflow: visible en toda la cadena para que el mega-menú (position:
+         absolute) nunca quede recortado.
+    */
+    .topbar-nav {
+      position: sticky;
+      top: 0; /* lo fija ajustarOffsetNav() con la altura real de .topbar */
+      z-index: 90;
+      background: var(--blanco);
+      border-bottom: 1px solid var(--gris-borde);
+      overflow: visible;
+    }
+    .topbar-nav-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      align-items: stretch;
+      gap: 2px;
+      padding: 0 16px;
+      overflow-x: auto;
+      overflow-y: visible;
+      scrollbar-width: none;
+    }
+    .topbar-nav-inner::-webkit-scrollbar { display: none; }
+
+    .nav-item { position: relative; }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 46px;
+      padding: 0 13px;
+      background: transparent;
+      border: none;
+      font-family: var(--fuente);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--gris-texto);
+      cursor: pointer;
+      white-space: nowrap;
+      border-radius: var(--radio-sm);
+      transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out);
+    }
+    .nav-tab .nav-tab-icon { font-size: 15px; }
+    .nav-item.is-open .nav-tab,
+    .nav-tab:hover {
+      background: var(--verde-fondo);
+      color: var(--verde-oscuro);
+    }
+
+    /* Panel flotante del mega-menú */
+    .mega-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 230px;
+      background: var(--blanco);
+      border-radius: var(--radio);
+      box-shadow: var(--sombra-md);
+      border: 1px solid var(--gris-borde);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out),
+                  visibility 0s linear 0.2s;
+      z-index: 95;
+    }
+    /* Puente invisible que cubre el hueco entre el botón y el panel:
+       mientras el cursor cruza esa franja sigue "dentro" del mega-menú,
+       así no se cierra por accidente al pasar de uno a otro. */
+    .mega-menu::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 0;
+      right: 0;
+      height: 8px;
+    }
+    .nav-item.is-open .mega-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out),
+                  visibility 0s linear 0s;
+    }
+
+    .mega-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--radio-sm);
+      color: var(--gris-texto);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: background 0.15s var(--ease-out);
+    }
+    .mega-link:hover { background: var(--gris-suave); }
+    .mega-link .icono { font-size: 15px; width: 18px; text-align: center; }
+    .mega-link.mod-admin::after {
+      content: "Admin";
+      margin-left: auto;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--verde);
+      background: var(--verde-fondo);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mega-menu, .nav-tab { transition: none !important; }
+    }
+    @media (max-width: 680px) {
+      /* En mobile no hay cursor para hover: la Zona D de abajo ya cubre
+         la navegación completa por rol, así que ocultamos el topbar-nav
+         en vez de simular hover con toques (fuera de alcance de este ajuste). */
+      .topbar-nav { display: none; }
+    }
+
     /* ══════════ ZONA A — HEADER ══════════ */
     .header-a {
-      background: var(--verde-oscuro);
+      background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde) 100%);
       color: var(--blanco);
       border-radius: var(--radio-lg);
-      padding: 28px 24px;
-      margin-bottom: 20px;
-      box-shadow: var(--sombra-lg);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 28px rgba(4,82,35,0.30);
       position: relative;
       overflow: hidden;
       animation: fadeScaleIn 0.5s var(--ease-spring) both;
@@ -27,18 +159,11 @@
       transform: translateY(-50%);
       width: 72px;
       height: 72px;
-      background: url('../logocontecsheader.png') center/contain no-repeat;
+      background: url('../logocontecs.png') center/contain no-repeat;
       opacity: 0.16;
     }
     .header-a .saludo { font-size: 13px; opacity: 0.8; }
     .header-a .nombre { font-size: 21px; font-weight: 700; margin: 3px 0 10px; }
-    .header-a .subtitulo-espacio {
-      font-size: 12.5px;
-      font-weight: 600;
-      opacity: 0.75;
-      margin: -6px 0 10px;
-      letter-spacing: 0.2px;
-    }
     .pills { display: flex; gap: 8px; flex-wrap: wrap; }
     .rol-pill {
       display: inline-block;
@@ -78,9 +203,10 @@
     }
     .widget-card {
       background: #fff;
-      border-radius: var(--radio);
+      border-radius: 12px;
       padding: 16px;
-      box-shadow: var(--sombra-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 3px solid var(--verde-claro);
       animation: cardCascade 0.45s var(--ease-spring) both;
     }
     .widget-card:nth-child(1) { animation-delay: 0.10s; }
@@ -98,10 +224,11 @@
       background: #fff;
       border-radius: var(--radio-sm);
       padding: 12px 14px;
-      box-shadow: var(--sombra-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       display: flex;
       align-items: center;
       gap: 12px;
+      border-left: 3px solid var(--verde-claro);
       animation: cardCascade 0.4s var(--ease-spring) both;
     }
     .evento-item .evt-icono { font-size: 20px; }
@@ -191,114 +318,23 @@
     @media (max-width: 400px) {
       .widgets-grid { grid-template-columns: 1fr; }
     }
-    /* ══════════ ☰ Botón menú (abre bottom sheet de módulos) ══════════ */
-    .btn-menu {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      border-radius: 50%;
-      transition: background 0.2s;
-    }
-    .btn-menu:hover { background: rgba(0,0,0,0.05); }
-    .btn-menu span {
-      display: block;
-      width: 18px;
-      height: 2px;
-      border-radius: 2px;
-      background: var(--gris-texto);
-      transition: transform 0.25s var(--ease-out), opacity 0.2s;
-    }
-    .btn-menu[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-    .btn-menu[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-    .btn-menu[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-    /* ══════════ Bottom sheet estilo iOS ══════════ */
-    .sheet-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s var(--ease-out);
-      z-index: 200;
-    }
-    .sheet-backdrop.is-open { opacity: 1; pointer-events: auto; }
-
-    .bottom-sheet {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      max-height: 78vh;
-      background: var(--blanco);
-      border-radius: 24px 24px 0 0;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
-      z-index: 201;
-      transform: translateY(100%);
-      transition: transform 0.38s var(--ease-spring);
-      display: flex;
-      flex-direction: column;
-    }
-    .bottom-sheet.is-open { transform: translateY(0); }
-
-    .sheet-handle {
-      width: 38px; height: 4px;
-      background: var(--gris-borde);
-      border-radius: 4px;
-      margin: 10px auto 4px;
-      flex-shrink: 0;
-    }
-    .sheet-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 20px 14px;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--gris-texto);
-      border-bottom: 1px solid var(--gris-borde);
-      flex-shrink: 0;
-    }
-    .sheet-close {
-      border: none;
-      background: var(--gris-suave);
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      font-size: 13px;
-      color: var(--gris-medio);
-      cursor: pointer;
-    }
-    .sheet-body {
-      overflow-y: auto;
-      padding: 16px 20px 32px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    body.sheet-open { overflow: hidden; }
   </style>
 </head>
-
 <body>
   <div class="topbar">
     <h1>CONTECS</h1>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <button class="btn-menu" id="btn-menu" aria-label="Abrir módulos" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <button class="btn-logout" id="btn-logout">Salir</button>
-    </div>
+    <button class="btn-logout" id="btn-logout">Salir</button>
   </div>
+
+  <nav class="topbar-nav" id="topbar-nav" aria-label="Navegación por categoría">
+    <div class="topbar-nav-inner" id="topbar-nav-inner"></div>
+  </nav>
 
   <div class="container">
     <!-- ZONA A — Header -->
     <div class="header-a">
       <div class="saludo">Bienvenido,</div>
       <div class="nombre" id="nombre-usuario">...</div>
-      <div class="subtitulo-espacio">Tu espacio CONTECS</div>
       <div class="pills">
         <span class="rol-pill"  id="rol-label">...</span>
         <span class="nivel-pill" id="nivel-label"></span>
@@ -312,21 +348,9 @@
     <div id="contenido-principal"></div>
   </div>
 
-  <!-- Bottom sheet — módulos por categoría, filtrados por rol -->
-  <div class="sheet-backdrop" id="sheet-backdrop"></div>
-  <div class="bottom-sheet" id="bottom-sheet" role="dialog" aria-modal="true" aria-label="Módulos disponibles">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <span>Módulos</span>
-      <button class="sheet-close" id="sheet-close" aria-label="Cerrar">✕</button>
-    </div>
-    <div class="sheet-body" id="sheet-body"></div>
-  </div>
-
   <script type="module">
     import { guardRoute, getUsuarioActual, cerrarSesion } from "../js/core/auth.js";
     import { tienePermiso, infoRol } from "../js/core/permisos.js";
-    import { usuarioPuedeVerReunion } from "../js/modulos/reuniones-utils.js";
     import { formatearMoneda } from "../js/core/operaciones.js";
     import { db } from "../js/core/firebase-config.js";
     import {
@@ -374,6 +398,131 @@
     setInterval(calcularCuentaRegresiva, 1000);
 
     const contenido = document.getElementById("contenido-principal");
+
+    // ══════════ Categorías/módulos — fuente única usada tanto por el
+    // topbar-nav (mega-menú) como por la grilla de Zona D más abajo ══════════
+    const CATEGORIAS = [
+      {
+        id: "congreso", label: "Congreso", icono: "🎓",
+        modulos: [
+          { label: "Participantes",         icono: "🎟️", href: "modulos/congreso/modulos_participantes.html",    permiso: "ver_participantes" },
+          { label: "Inscripciones",         icono: "🎫", href: "modulos/congreso/inscripciones.html",            permiso: "gestionar_inscripciones", admin: true },
+          { label: "Estadísticas Congreso", icono: "📊", href: "modulos/congreso/reportes_estadisticaCont.html", permiso: "ver_reportes" },
+        ],
+      },
+      {
+        id: "finanzas", label: "Finanzas", icono: "💰",
+        modulos: [
+          { label: "Fondos",     icono: "🪙", href: "modulos/finanzas/fondos.html",    permiso: "ver_fondos", admin: true },
+          { label: "Ventas",     icono: "🧾", href: "modulos/finanzas/ventas2.html",   permiso: "registrar_ventas" },
+          { label: "Compras",    icono: "🛒", href: "modulos/finanzas/compras2.html",  permiso: "registrar_compras", admin: true },
+          { label: "Reportes",   icono: "📈", href: "modulos/finanzas/reportes.html",  permiso: "ver_reportes" },
+          { label: "Bitácora",   icono: "📋", href: "modulos/finanzas/bitacora.html",  permiso: "ver_bitacora" },
+        ],
+      },
+      {
+        id: "logistica", label: "Logística", icono: "📦",
+        modulos: [
+          { label: "Inventario", icono: "📦", href: "modulos/logistica/inventario.html", permiso: "ver_inventario" },
+          { label: "Catálogo",   icono: "🗂️", href: "modulos/logistica/catalogo.html",   permiso: "editar_catalogo", admin: true },
+        ],
+      },
+      {
+        id: "voluntariado", label: "Voluntariado", icono: "🤝",
+        modulos: [
+          { label: "Voluntarios",  icono: "🤝", href: "modulos/voluntariado/voluntarios.html",  permiso: "gestionar_voluntarios", admin: true },
+          { label: "Actividades",  icono: "🎯", href: "modulos/voluntariado/actividades.html",  permiso: "gestionar_actividades", admin: true },
+          { label: "Giras",        icono: "🚌", href: "modulos/voluntariado/giras.html",        permiso: "gestionar_giras", admin: true },
+          { label: "Calendario",   icono: "📅", href: "modulos/voluntariado/calendario.html",   permiso: "ver_calendario", admin: true },
+        ],
+      },
+      {
+        id: "admin", label: "Administración", icono: "⚙️",
+        modulos: [
+          { label: "Usuarios",  icono: "👥", href: "modulos/admin/usuarios.html",  permiso: "gestionar_usuarios", admin: true },
+          { label: "Exportar",  icono: "📤", href: "modulos/admin/exportar.html",  permiso: "exportar_datos", admin: true },
+        ],
+      },
+    ];
+
+    // ══════════ TOPBAR-NAV — offset dinámico + mega-menú por hover ══════════
+    function ajustarOffsetTopbarNav() {
+      const topbarEl = document.querySelector(".topbar");
+      const navEl = document.getElementById("topbar-nav");
+      if (!topbarEl || !navEl) return;
+      // Se mide la altura real del topbar en vez de usar un número fijo
+      // estimado a mano, para que la barra de navegación siempre quede
+      // pegada justo debajo, sin importar si el contenido del topbar cambia.
+      navEl.style.top = `${topbarEl.offsetHeight}px`;
+    }
+
+    function renderTopbarNav() {
+      const navWrap  = document.getElementById("topbar-nav");
+      const navInner = document.getElementById("topbar-nav-inner");
+      if (!navWrap || !navInner) return;
+
+      const categoriasVisibles = CATEGORIAS
+        .map(cat => ({ ...cat, modulos: cat.modulos.filter(m => tienePermiso(rol, m.permiso)) }))
+        .filter(cat => cat.modulos.length > 0);
+
+      if (categoriasVisibles.length === 0) {
+        navWrap.style.display = "none";
+        return;
+      }
+
+      navInner.innerHTML = "";
+      categoriasVisibles.forEach(cat => {
+        const item = document.createElement("div");
+        item.className = "nav-item";
+
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "nav-tab";
+        tab.innerHTML = `<span class="nav-tab-icon">${cat.icono}</span><span>${cat.label}</span>`;
+
+        const menu = document.createElement("div");
+        menu.className = "mega-menu";
+        menu.innerHTML = cat.modulos.map(m => `
+          <a class="mega-link${m.admin ? " mod-admin" : ""}" href="${m.href}">
+            <span class="icono">${m.icono}</span><span>${m.label}</span>
+          </a>`).join("");
+
+        item.appendChild(tab);
+        item.appendChild(menu);
+        navInner.appendChild(item);
+      });
+
+      attachMegaMenuHover(navInner);
+    }
+
+    // Hover con zona de tolerancia: cada nav-item tiene su propio timer de
+    // cierre con un pequeño retraso, así que un movimiento diagonal rápido
+    // del botón hacia el panel (o viceversa) no lo cierra por accidente.
+    // Solo se cierra cuando el cursor sale por completo de botón + panel.
+    function attachMegaMenuHover(navInner) {
+      const items = Array.from(navInner.querySelectorAll(".nav-item"));
+      const CIERRE_DELAY_MS = 160;
+      let closeTimer = null;
+
+      function cerrarTodosMenos(actual) {
+        items.forEach(it => { if (it !== actual) it.classList.remove("is-open"); });
+      }
+
+      items.forEach(item => {
+        item.addEventListener("mouseenter", () => {
+          clearTimeout(closeTimer);
+          cerrarTodosMenos(item);
+          item.classList.add("is-open");
+        });
+        item.addEventListener("mouseleave", () => {
+          closeTimer = setTimeout(() => item.classList.remove("is-open"), CIERRE_DELAY_MS);
+        });
+      });
+    }
+
+    ajustarOffsetTopbarNav();
+    window.addEventListener("resize", ajustarOffsetTopbarNav);
+    renderTopbarNav();
 
     if (rol === "sin_rol") {
       contenido.innerHTML = `
@@ -510,31 +659,16 @@
               const snap = await getDocs(collection(db, nombreColeccion));
               return snap.docs.map(d => ({ id: d.id, ...d.data(), tipo, icono }));
             };
-            const leerReuniones = async () => {
-              const snap = await getDocs(collection(db, "reuniones"));
-              return snap.docs
-                .map(d => ({ id: d.id, ...d.data() }))
-                .filter(r => usuarioPuedeVerReunion(r, usuario)) // solo las reuniones a las que el usuario está invitado
-                .map(r => ({
-                  ...r,
-                  tipo: "reunion",
-                  icono: "🗓️",
-                  nombre: r.titulo,
-                  fecha: r.fechaInicio,
-                  _fechaFin: r.fechaFin?.toDate ? r.fechaFin.toDate() : new Date(r.fechaFin || 0),
-                }));
-            };
-            const [actividades, giras, ventas, reuniones] = await Promise.all([
+            const [actividades, giras, ventas] = await Promise.all([
               leer("actividades_voluntarios", "actividad", "🎯"),
               leer("giras_voluntarios", "gira", "🚌"),
               leer("actividades_ventas", "venta", "💰"),
-              leerReuniones(),
             ]);
 
             const ahora = new Date();
             const limite = new Date(ahora.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-            const proximos = [...actividades, ...giras, ...ventas, ...reuniones]
+            const proximos = [...actividades, ...giras, ...ventas]
               .filter(e => e.activo !== false)
               .map(e => ({ ...e, _fecha: e.fecha?.toDate ? e.fecha.toDate() : new Date(e.fecha || 0) }))
               .filter(e => e._fecha >= new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()) && e._fecha <= limite)
@@ -549,9 +683,7 @@
             eventosWrap.innerHTML = proximos.map(e => {
               const esHoy = e._fecha.toDateString() === ahora.toDateString();
               let enVivo = false;
-              if (e.tipo === "reunion") {
-                enVivo = ahora >= e._fecha && ahora <= e._fechaFin;
-              } else if (esHoy && Array.isArray(e.turnos)) {
+              if (esHoy && Array.isArray(e.turnos)) {
                 enVivo = e.turnos.some(t => {
                   if (!t.horaInicio || !t.horaFin) return false;
                   const hoyStr = ahora.toTimeString().slice(0, 5);
@@ -559,13 +691,12 @@
                 });
               }
               const fechaTexto = e._fecha.toLocaleDateString("es-PA", { weekday: "short", day: "numeric", month: "short" });
-              const lugarTexto = e.lugar || (e.tipo === "reunion" && e.esVirtual ? "Virtual" : "");
               return `
                 <div class="evento-item">
                   <span class="evt-icono">${e.icono}</span>
                   <div class="evt-info">
                     <div class="evt-nombre">${e.nombre || "Sin nombre"}</div>
-                    <div class="evt-fecha">${esHoy ? "Hoy" : fechaTexto}${lugarTexto ? " · " + lugarTexto : ""}</div>
+                    <div class="evt-fecha">${esHoy ? "Hoy" : fechaTexto}${e.lugar ? " · " + e.lugar : ""}</div>
                   </div>
                   ${enVivo ? `<span class="pill-en-vivo">● EN VIVO</span>` : ""}
                 </div>`;
@@ -578,56 +709,8 @@
       }
 
       // ══════════ ZONA D — Módulos agrupados por categoría ══════════
-      const CATEGORIAS = [
-        {
-          id: "congreso", label: "Congreso", icono: "🎓",
-          modulos: [
-            { label: "Participantes",         icono: "🎟️", href: "modulos/congreso/modulos_participantes.html",    permiso: "ver_participantes" },
-            { label: "Gestión de Evento",         icono: "🎫", href: "modulos/congreso/inscripciones.html",            permiso: "gestionar_inscripciones", admin: true },
-            { label: "Estadísticas Congreso", icono: "📊", href: "modulos/congreso/reportes_estadisticaCont.html", permiso: "ver_reportes" },
-          ],
-        },
-        {
-          id: "finanzas", label: "Finanzas", icono: "💰",
-          modulos: [
-            { label: "Fondos",     icono: "🪙", href: "modulos/finanzas/fondos.html",    permiso: "ver_fondos", admin: true },
-            { label: "Ventas",     icono: "🧾",
-              href: tienePermiso(rol, "registrar_ventas") ? "modulos/finanzas/ventas2.html" : "modulos/finanzas/ventaRapida.html",
-              permiso: "acceso_venta_rapida" },
-            { label: "Compras",    icono: "🛒", href: "modulos/finanzas/compras2.html",  permiso: "registrar_compras", admin: true },
-            { label: "Reportes",   icono: "📈", href: "modulos/finanzas/reportes.html",  permiso: "ver_reportes" },
-            { label: "Bitácora",   icono: "📋", href: "modulos/finanzas/bitacora.html",  permiso: "ver_bitacora" },
-          ],
-        },
-        {
-          id: "logistica", label: "Logística", icono: "📦",
-          modulos: [
-            { label: "Inventario", icono: "📦", href: "modulos/logistica/inventario.html", permiso: "ver_inventario" },
-            { label: "Catálogo",   icono: "🗂️", href: "modulos/logistica/catalogo.html",   permiso: "editar_catalogo", admin: true },
-          ],
-        },
-        {
-          id: "voluntariado", label: "Voluntariado", icono: "🤝",
-          modulos: [
-            { label: "Voluntarios",  icono: "🤝", href: "modulos/voluntariado/voluntarios.html",  permiso: "gestionar_voluntarios", admin: true },
-            { label: "Actividades",  icono: "🎯", href: "modulos/voluntariado/actividades.html",  permiso: "gestionar_actividades", admin: true },
-            { label: "Giras",        icono: "🚌", href: "modulos/voluntariado/giras.html",        permiso: "gestionar_giras", admin: true },
-            { label: "Calendario",   icono: "📅", href: "modulos/voluntariado/calendario.html",   permiso: "ver_calendario", admin: true },
-          ],
-        },
-        {
-          id: "admin", label: "Administración", icono: "⚙️",
-          modulos: [
-            { label: "Usuarios",  icono: "👥", href: "modulos/admin/usuarios.html",  permiso: "gestionar_usuarios", admin: true },
-            { label: "Exportar",  icono: "📤", href: "modulos/admin/exportar.html",  permiso: "exportar_datos", admin: true },
-            { label: "Secretaria",  icono: "💼", href: "modulos/admin/secretaria.html",  permiso: "gestionar_secretaria", admin: true },
-          ],
-        },
-      ];
-
-      // ══════════ Módulos agrupados por categoría — ahora viven en el
-      // bottom sheet (☰), no en el scroll principal ══════════
-      const sheetBody = document.getElementById("sheet-body");
+      // CATEGORIAS ahora se define arriba (junto al resto de const de nivel
+      // superior) para poder reutilizarla también en el topbar-nav/mega-menú.
       let animIdx = 0;
       CATEGORIAS.forEach(cat => {
         const modulosVisibles = cat.modulos.filter(m => tienePermiso(rol, m.permiso));
@@ -648,100 +731,16 @@
           a.href = mod.href;
           a.className = "modulo-btn" + (mod.admin ? " mod-admin" : "");
           a.innerHTML = `<span class="icono">${mod.icono}</span><span class="label">${mod.label}</span>`;
-          a.style.animationDelay = `${0.05 + animIdx * 0.04}s`;
+          a.style.animationDelay = `${0.18 + animIdx * 0.05}s`;
           animIdx++;
           grid.appendChild(a);
         });
         bloque.appendChild(grid);
-        sheetBody.appendChild(bloque);
+        contenido.appendChild(bloque);
       });
-
-      // Si el rol no tiene ningún módulo visible, ocultamos el botón ☰
-      // para no mostrar un menú vacío.
-      if (sheetBody.children.length === 0) {
-        document.getElementById("btn-menu").style.display = "none";
-      }
     }
 
     document.getElementById("btn-logout").addEventListener("click", cerrarSesion);
-
-    // ══════════ ☰ Bottom sheet — abrir/cerrar ══════════
-    const btnMenu       = document.getElementById("btn-menu");
-    const sheetEl        = document.getElementById("bottom-sheet");
-    const sheetBackdrop  = document.getElementById("sheet-backdrop");
-    const sheetCloseBtn  = document.getElementById("sheet-close");
-
-    function abrirSheet() {
-      sheetEl.classList.add("is-open");
-      sheetBackdrop.classList.add("is-open");
-      document.body.classList.add("sheet-open");
-      btnMenu.setAttribute("aria-expanded", "true");
-    }
-    function cerrarSheet() {
-      sheetEl.classList.remove("is-open");
-      sheetBackdrop.classList.remove("is-open");
-      document.body.classList.remove("sheet-open");
-      btnMenu.setAttribute("aria-expanded", "false");
-    }
-    btnMenu?.addEventListener("click", () => {
-      sheetEl.classList.contains("is-open") ? cerrarSheet() : abrirSheet();
-    });
-    sheetCloseBtn?.addEventListener("click", cerrarSheet);
-    sheetBackdrop?.addEventListener("click", cerrarSheet);
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") cerrarSheet();
-    });
-
-    // ══════════ Sensación premium al hacer scroll ══════════
-    // 1) Topbar: sombra/blur se intensifican solo cuando hay contenido debajo
-    // 2) Header (Zona A): parallax sutil, se mueve más lento que el resto
-    const topbarEl = document.querySelector(".topbar");
-    const headerAEl = document.querySelector(".header-a");
-    // La animación de entrada (fadeScaleIn) usa fill-mode "both", que retiene
-    // el transform para siempre. La liberamos al terminar para que el
-    // parallax por scroll (más abajo) pueda tomar el control de esa propiedad.
-    if (headerAEl) {
-      headerAEl.addEventListener("animationend", () => {
-        headerAEl.style.animation = "none";
-      }, { once: true });
-    }
-    let tickingScroll = false;
-
-    function onScrollFrame() {
-      const y = window.scrollY;
-      if (topbarEl) topbarEl.classList.toggle("is-scrolled", y > 8);
-      if (headerAEl) headerAEl.style.transform = `translateY(${y * -0.15}px)`;
-      tickingScroll = false;
-    }
-    window.addEventListener("scroll", () => {
-      if (!tickingScroll) {
-        requestAnimationFrame(onScrollFrame);
-        tickingScroll = true;
-      }
-    }, { passive: true });
-
-    // 3) Scroll-reveal: los bloques de eventos y módulos aparecen al
-    // entrar en pantalla, en vez de estar todos animados desde la carga.
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    function observarReveal(selector) {
-      document.querySelectorAll(selector).forEach(el => {
-        if (!el.classList.contains("reveal-on-scroll")) {
-          el.classList.add("reveal-on-scroll");
-          revealObserver.observe(el);
-        }
-      });
-    }
-
-    // Nota: el scroll-reveal de categorías se retiró — los módulos ahora
-    // viven en el bottom sheet (☰), que tiene su propia animación de entrada.
   </script>
 </body>
 </html>

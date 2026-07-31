@@ -4,83 +4,52 @@
    =========================== */
 
 :root {
-  /* Paleta principal — verde institucional CONTECS (sin cambios de marca) */
+  /* Paleta principal */
   --verde:          #00722e;
   --verde-oscuro:   #045223;
   --verde-claro:    #39b54a;
 
   /* Derivados para profundidad */
-  --verde-fondo:    #eef8f1;
+  --verde-fondo:    #e8f5ec;
   --verde-hover:    #005f26;
-  --verde-sombra:   rgba(0, 114, 46, 0.14);
-  /* Verde "apagado" — para tabs/estados activos, más discreto que el verde puro */
-  --verde-apagado:      #4c8c63;
-  --verde-apagado-bg:   #eef6f0;
+  --verde-sombra:   rgba(0, 114, 46, 0.15);
 
-  /* Neutros — tono "carbón" en vez de negro/gris puro, look premium */
-  --gris-texto:     #1d1d1f;
-  --gris-texto-sec: #6e6e73;
-  --gris-suave:     #fafafa;
-  --gris-borde:     #e5e5e5;
-  --gris-medio:     #86868b;
+  /* Neutros */
+  --gris-texto:     #1a2e1e;
+  --gris-suave:     #f4f7f5;
+  --gris-borde:     #d0dbd2;
+  --gris-medio:     #8a9e8d;
   --blanco:         #ffffff;
 
-  /* Semánticos — versión tenue/pastel, no saturados */
+  /* Semánticos */
   --rojo:           #c0392b;
   --rojo-fondo:     #fdedec;
-  --amarillo:       #b8790a;
-  --amarillo-fondo: #fdf6e8;
+  --amarillo:       #d4850a;
+  --amarillo-fondo: #fef9e7;
   --azul-info:      #2471a3;
+  
 
-
-  /* Sombras — mucho más suaves, la profundidad se sugiere, no se marca */
-  --sombra-sm:      0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
-  --sombra-md:      0 4px 16px rgba(0,0,0,0.06);
-  --sombra-lg:      0 12px 32px rgba(0,0,0,0.08);
-  --sombra-verde:   0 6px 20px rgba(0, 114, 46, 0.14);
+  /* Sombras */
+  --sombra-sm:      0 2px 8px rgba(0,0,0,0.07);
+  --sombra-md:      0 4px 16px rgba(0,0,0,0.10);
+  --sombra-verde:   0 4px 16px rgba(0, 114, 46, 0.18);
   --sombra-eurus:   rgba(0, 6, 114, 0.18);
 
 
-  /* Bordes — más generosos, look "caro" */
-  --radio:          16px;
-  --radio-sm:       10px;
-  --radio-lg:       22px;
+  /* Bordes */
+  --radio:          12px;
+  --radio-sm:       8px;
+  --radio-lg:       16px;
 
-  /* Tipografía: apilado que prioriza SF Pro en Apple, Segoe en Windows,
-     con Inter como fallback web para que no dependa del SO */
-  --fuente: -apple-system, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --fuente: 'Segoe UI', system-ui, -apple-system, sans-serif;
 
-  /* Animaciones — curva estándar "premium", sin rebote exagerado */
-  --ease-spring:    cubic-bezier(0.34, 1.2, 0.64, 1);
+  /* Animaciones */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* ════════════════════════════════════
-   SCROLL-REVEAL — aparición al entrar en viewport
-   Se activa agregando .is-visible vía IntersectionObserver (JS)
-   ════════════════════════════════════ */
-.reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.55s var(--ease-out), transform 0.55s var(--ease-out);
-}
-.reveal-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Topbar: sombra/blur se intensifican al scrollear, no de entrada */
-.topbar.is-scrolled {
-  box-shadow: var(--sombra-sm);
-  background: rgba(250, 250, 250, 0.88);
-}
 
 body {
   font-family: var(--fuente);
@@ -88,17 +57,7 @@ body {
   color: var(--gris-texto);
   min-height: 100vh;
   font-size: 15px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.01em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
+  line-height: 1.5;
 }
 
 /* ════════════════════════════════════
@@ -182,14 +141,10 @@ body {
   background: var(--blanco);
   border-radius: var(--radio);
   box-shadow: var(--sombra-sm);
-  padding: 24px;
+  padding: 20px;
   margin-bottom: 16px;
-  transition: box-shadow 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  border-left: 3px solid var(--verde-claro);
   animation: cardCascade 0.4s var(--ease-spring) both;
-}
-.card:hover {
-  box-shadow: var(--sombra-md);
-  transform: translateY(-1px);
 }
 .card:nth-child(1) { animation-delay: 0.05s; }
 .card:nth-child(2) { animation-delay: 0.10s; }
@@ -197,20 +152,18 @@ body {
 .card:nth-child(4) { animation-delay: 0.20s; }
 
 .card-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--gris-texto-sec);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
+  color: var(--verde-oscuro);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid var(--verde-fondo);
 }
 
 /* ---- TOPBAR ---- */
 .topbar {
-  background: rgba(250, 250, 250, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  color: var(--gris-texto);
+  background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde) 100%);
+  color: var(--blanco);
   padding: 14px 20px;
   display: flex;
   align-items: center;
@@ -218,11 +171,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid var(--gris-borde);
+  /* Sin box-shadow: un shadow de color (rgba verde) con z-index alto se pinta
+     ENCIMA del elemento siguiente (topbar-nav / contenido), no detrás — eso
+     es lo que causaba la franja verde cruzando la línea divisoria. La
+     separación real ahora la da el border-bottom de .topbar-nav únicamente. */
+  box-shadow: none;
   animation: slideInLeft 0.35s var(--ease-out) both;
 }
-.topbar h1 { color: var(--verde-oscuro); }
-.topbar-link, .btn-logout { color: var(--gris-texto); }
 .topbar h1 {
   font-size: 18px;
   font-weight: 700;
@@ -235,16 +190,16 @@ body {
 .is-hidden { display: none; }
 .fondo-estado { font-size: 18px; }
 .btn-logout {
-  background: rgba(0,0,0,0.04);
-  border: 1px solid var(--gris-borde);
-  color: var(--gris-texto);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--blanco);
   padding: 6px 16px;
   border-radius: 20px;
   font-size: 13px;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
 }
-.btn-logout:hover  { background: rgba(0,0,0,0.08); }
+.btn-logout:hover  { background: rgba(255,255,255,0.25); }
 .btn-logout:active { transform: scale(0.94); }
 
 /* ---- BOTONES ---- */
@@ -269,13 +224,12 @@ body {
   transition-duration: 0.08s;
 }
 .btn-primary {
-  background: var(--verde);
+  background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
   color: var(--blanco);
   box-shadow: var(--sombra-verde);
 }
 .btn-primary:hover {
-  background: var(--verde-hover);
-  box-shadow: 0 8px 22px rgba(0,114,46,0.22);
+  box-shadow: 0 8px 24px rgba(0,114,46,0.32);
   transform: translateY(-1px);
 }
 .btn-success  { background: var(--verde-claro); color: var(--blanco); }
