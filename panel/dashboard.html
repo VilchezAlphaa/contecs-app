@@ -46,10 +46,21 @@
       height: 22px;
       background: var(--blanco);
       border-radius: 50%;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,114,46,0.14);
       flex-shrink: 0;
     }
     .badge-verificado svg { width: 13px; height: 13px; display: block; }
+    .badge-verificado svg path {
+      stroke: var(--verde);
+      stroke-width: 3.4;
+    }
+
+    /* Variante dorada — exclusiva para el rol CEO */
+    .badge-verificado--ceo {
+      background: linear-gradient(145deg, #ffe9a8 0%, #e8bc4e 45%, #b8862f 100%);
+      box-shadow: 0 2px 8px rgba(184,134,47,0.55), 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .badge-verificado--ceo svg path { stroke: var(--blanco); }
     .cuenta-regresiva {
       margin-top: 14px;
       padding-top: 14px;
@@ -485,7 +496,7 @@
         <span class="rol-pill"  id="rol-label">...</span>
         <span class="badge-verificado" id="badge-verificado" title="Cuenta verificada">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 12.5L9.5 18L20 6" stroke="#39b54a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 12.5L9.5 18L20 6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
       </div>
@@ -536,6 +547,11 @@
 
     document.getElementById("nombre-usuario").textContent = usuario.nombre || "Usuario";
     document.getElementById("rol-label").textContent      = info.label || "Sin rol";
+
+    // Badge dorado exclusivo para el rol CEO 🏆
+    if (String(rol).toLowerCase() === "ceo") {
+      document.getElementById("badge-verificado").classList.add("badge-verificado--ceo");
+    }
 
     // ── Cuenta regresiva al evento (19 de octubre de 2026) — siempre visible en Zona A ──
     const calcularCuentaRegresiva = () => {
