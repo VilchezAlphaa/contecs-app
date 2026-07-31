@@ -376,7 +376,7 @@
         padding: 0 16px;
         font-size: 14px;
         font-weight: 500;
-        color: rgba(255,255,255,0.75);
+        color: rgba(255,255,255,0.92);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -396,6 +396,8 @@
         left: 0;
         min-width: 220px;
         background: var(--verde-oscuro);
+        border: 1px solid rgba(255,255,255,0.22);
+        border-top: none;
         border-radius: 0 0 var(--radio) var(--radio);
         box-shadow: var(--sombra-lg);
         max-height: 0;
@@ -431,7 +433,12 @@
         transition: background 0.15s var(--ease-out);
       }
       .tab-dropdown .modulo-btn:hover { background: rgba(255,255,255,0.14); }
-      .tab-dropdown .modulo-btn .label { font-size: 14px; font-weight: 500; }
+      .tab-dropdown .modulo-btn .label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #ffffff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+      }
 
       /* Contenido principal: ancho fluido, aprovecha la pantalla */
       .container {
