@@ -13,6 +13,9 @@
   --verde-fondo:    #eef8f1;
   --verde-hover:    #005f26;
   --verde-sombra:   rgba(0, 114, 46, 0.14);
+  /* Verde "apagado" — para tabs/estados activos, más discreto que el verde puro */
+  --verde-apagado:      #4c8c63;
+  --verde-apagado-bg:   #eef6f0;
 
   /* Neutros — tono "carbón" en vez de negro/gris puro, look premium */
   --gris-texto:     #1d1d1f;
