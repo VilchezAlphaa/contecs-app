@@ -164,19 +164,31 @@ body {
 .topbar {
   background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde) 100%);
   color: var(--blanco);
-  padding: 14px 20px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 24px;
   position: sticky;
   top: 0;
   z-index: 100;
   /* Sin box-shadow: un shadow de color (rgba verde) con z-index alto se pinta
-     ENCIMA del elemento siguiente (topbar-nav / contenido), no detrás — eso
-     es lo que causaba la franja verde cruzando la línea divisoria. La
-     separación real ahora la da el border-bottom de .topbar-nav únicamente. */
+     ENCIMA del elemento siguiente, no detrás — eso causaba la franja verde
+     cruzando la línea divisoria. Ahora todo (marca + nav + logout) vive en
+     esta única barra verde, sin segunda barra ni bordes adicionales debajo. */
   box-shadow: none;
   animation: slideInLeft 0.35s var(--ease-out) both;
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.topbar-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+  opacity: 1; /* logo a opacidad completa, sin atenuar */
 }
 .topbar h1 {
   font-size: 18px;
@@ -190,6 +202,8 @@ body {
 .is-hidden { display: none; }
 .fondo-estado { font-size: 18px; }
 .btn-logout {
+  flex-shrink: 0;
+  margin-left: auto;
   background: rgba(255,255,255,0.15);
   border: 1px solid rgba(255,255,255,0.25);
   color: var(--blanco);

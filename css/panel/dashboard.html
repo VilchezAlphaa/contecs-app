@@ -6,37 +6,29 @@
   <title>CONTECS — Panel Principal</title>
   <link rel="stylesheet" href="../css/styles.css"/>
   <style>
-    /* ══════════ TOPBAR-NAV — Tabs por categoría + mega-menú ══════════
-       Reglas de separación (Problema 1):
-       - El borde inferior pertenece ÚNICAMENTE a .topbar-nav (border-bottom).
-       - .topbar (verde) no tiene borde ni box-shadow con color: ver css/styles.css.
-       - .topbar-nav tiene background sólido (blanco), así que nada de detrás
-         puede "sangrar" a través de él.
-       - top se calcula en JS con la altura real de .topbar (ajustarOffsetNav),
-         no con un valor estimado a mano.
-       - overflow: visible en toda la cadena para que el mega-menú (position:
-         absolute) nunca quede recortado.
+    /* ══════════ TOPBAR — marca + nav + mega-menú, todo en una sola barra ══════════
+       - Una sola barra verde (.topbar, en css/styles.css): logo + "CONTECS" a
+         la izquierda, opciones al centro, "Salir" a la derecha. Ya no hay
+         segunda barra blanca debajo — se eliminó por completo.
+       - Bug encontrado: .topbar-nav-inner tenía `overflow-x: auto` junto con
+         `overflow-y: visible`. Por spec, cuando un eje no es "visible" el
+         otro eje "visible" se recalcula como "auto" — eso recortaba
+         verticalmente el mega-menú (quedaba con opacity:1 pero invisible,
+         y sin poder recibir clicks). Ahora no hay overflow ninguno: nada
+         recorta el panel flotante.
+       - Las opciones del topbar solo abren el menú al pasar el mouse (hover),
+         nunca quedan "seleccionadas"; lo único clickeable son los enlaces
+         de adentro del panel, que sí navegan a su página.
     */
     .topbar-nav {
-      position: sticky;
-      top: 0; /* lo fija ajustarOffsetNav() con la altura real de .topbar */
-      z-index: 90;
-      background: var(--blanco);
-      border-bottom: 1px solid var(--gris-borde);
-      overflow: visible;
+      flex: 1;
+      min-width: 0;
     }
     .topbar-nav-inner {
-      max-width: 680px;
-      margin: 0 auto;
       display: flex;
       align-items: stretch;
       gap: 2px;
-      padding: 0 16px;
-      overflow-x: auto;
-      overflow-y: visible;
-      scrollbar-width: none;
     }
-    .topbar-nav-inner::-webkit-scrollbar { display: none; }
 
     .nav-item { position: relative; }
 
@@ -44,36 +36,35 @@
       display: flex;
       align-items: center;
       gap: 7px;
-      height: 46px;
+      height: 34px;
       padding: 0 13px;
       background: transparent;
       border: none;
       font-family: var(--fuente);
       font-size: 13.5px;
       font-weight: 600;
-      color: var(--gris-texto);
+      color: var(--blanco);
       cursor: pointer;
       white-space: nowrap;
-      border-radius: var(--radio-sm);
-      transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out);
+      border-radius: 999px;
+      transition: background 0.18s var(--ease-out);
     }
-    .nav-tab .nav-tab-icon { font-size: 15px; }
+    .nav-tab .nav-tab-icon { font-size: 14px; }
     .nav-item.is-open .nav-tab,
     .nav-tab:hover {
-      background: var(--verde-fondo);
-      color: var(--verde-oscuro);
+      background: rgba(255,255,255,0.16);
     }
 
-    /* Panel flotante del mega-menú */
+    /* Panel flotante del mega-menú, estilo Apple: blanco, esquinas
+       redondeadas, sombra suave, texto en negritas. */
     .mega-menu {
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 10px);
       left: 0;
       min-width: 230px;
       background: var(--blanco);
       border-radius: var(--radio);
-      box-shadow: var(--sombra-md);
-      border: 1px solid var(--gris-borde);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
       padding: 8px;
       display: flex;
       flex-direction: column;
@@ -91,10 +82,10 @@
     .mega-menu::before {
       content: "";
       position: absolute;
-      top: -8px;
+      top: -10px;
       left: 0;
       right: 0;
-      height: 8px;
+      height: 10px;
     }
     .nav-item.is-open .mega-menu {
       opacity: 1;
@@ -110,7 +101,8 @@
       gap: 10px;
       padding: 9px 10px;
       border-radius: var(--radio-sm);
-      color: var(--gris-texto);
+      color: #1a1a1a;
+      font-weight: 700;
       text-decoration: none;
       font-size: 13.5px;
       transition: background 0.15s var(--ease-out);
@@ -322,13 +314,17 @@
 </head>
 <body>
   <div class="topbar">
-    <h1>CONTECS</h1>
+    <div class="topbar-brand">
+      <img src="../logocontecs.png" alt="CONTECS" class="topbar-logo" />
+      <h1>CONTECS</h1>
+    </div>
+
+    <nav class="topbar-nav" id="topbar-nav" aria-label="Navegación por categoría">
+      <div class="topbar-nav-inner" id="topbar-nav-inner"></div>
+    </nav>
+
     <button class="btn-logout" id="btn-logout">Salir</button>
   </div>
-
-  <nav class="topbar-nav" id="topbar-nav" aria-label="Navegación por categoría">
-    <div class="topbar-nav-inner" id="topbar-nav-inner"></div>
-  </nav>
 
   <div class="container">
     <!-- ZONA A — Header -->
@@ -445,17 +441,7 @@
       },
     ];
 
-    // ══════════ TOPBAR-NAV — offset dinámico + mega-menú por hover ══════════
-    function ajustarOffsetTopbarNav() {
-      const topbarEl = document.querySelector(".topbar");
-      const navEl = document.getElementById("topbar-nav");
-      if (!topbarEl || !navEl) return;
-      // Se mide la altura real del topbar en vez de usar un número fijo
-      // estimado a mano, para que la barra de navegación siempre quede
-      // pegada justo debajo, sin importar si el contenido del topbar cambia.
-      navEl.style.top = `${topbarEl.offsetHeight}px`;
-    }
-
+    // ══════════ TOPBAR-NAV — mega-menú por hover ══════════
     function renderTopbarNav() {
       const navWrap  = document.getElementById("topbar-nav");
       const navInner = document.getElementById("topbar-nav-inner");
@@ -520,8 +506,6 @@
       });
     }
 
-    ajustarOffsetTopbarNav();
-    window.addEventListener("resize", ajustarOffsetTopbarNav);
     renderTopbarNav();
 
     if (rol === "sin_rol") {
