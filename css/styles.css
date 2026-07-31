@@ -162,9 +162,9 @@ body {
 
 /* ---- TOPBAR ---- */
 .topbar {
-  background: linear-gradient(135deg, rgba(4,82,35,0.86) 0%, rgba(0,114,46,0.86) 100%);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: linear-gradient(135deg, rgba(4,82,35,0.68) 0%, rgba(0,114,46,0.68) 100%);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   border-bottom: 1px solid rgba(255,255,255,0.16);
   color: var(--blanco);
   padding: 10px 20px;
