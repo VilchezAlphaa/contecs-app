@@ -162,10 +162,7 @@ body {
 
 /* ---- TOPBAR ---- */
 .topbar {
-  background: linear-gradient(135deg, rgba(4,82,35,0.68) 0%, rgba(0,114,46,0.68) 100%);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border-bottom: 1px solid rgba(255,255,255,0.16);
+  background: linear-gradient(135deg, var(--verde-oscuro) 0%, var(--verde) 100%);
   color: var(--blanco);
   padding: 10px 20px;
   display: flex;
@@ -178,14 +175,30 @@ body {
   /* Sin box-shadow: un shadow de color (rgba verde) con z-index alto se pinta
      ENCIMA del elemento siguiente, no detrás — eso causaba la franja verde
      cruzando la línea divisoria. Ahora todo (marca + nav + logout) vive en
-     esta única barra verde, sin segunda barra ni bordes adicionales debajo.
-     El fondo semitransparente + backdrop-filter dan el efecto "vidrio
-     esmerilado" cuando el contenido pasa por debajo al hacer scroll — esto
-     SOLO afecta a las páginas de módulos, porque dashboard.html sobreescribe
-     background/backdrop-filter/border-bottom con !important en su propio
-     <style>, dejándolo intacto tal como está hoy. */
+     esta única barra verde, sin segunda barra ni bordes adicionales debajo. */
   box-shadow: none;
   animation: slideInLeft 0.35s var(--ease-out) both;
+}
+
+/* ── Filo inferior del topbar con blur degradado ("orilla de río") ──
+   El topbar en sí queda sólido. Este pseudo-elemento vive PEGADO a su
+   borde inferior, se extiende un poco hacia el contenido, y aplica blur
+   con una máscara que lo va desvaneciendo de arriba a abajo — así el
+   contenido que pasa por debajo al hacer scroll se ve difuminado justo
+   en el filo, en vez de un corte duro. Solo afecta a páginas de módulo:
+   dashboard.html lo desactiva con !important en su propio <style>. */
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 22px;
+  pointer-events: none;
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
 }
 .topbar-brand {
   display: flex;

@@ -327,6 +327,7 @@
       position: relative; /* ancla para los dropdowns de .tab-dropdown */
       z-index: 200;
     }
+    .topbar::after { content: none !important; } /* sin filo con blur aquí */
     .topbar.is-scrolled {
       background: var(--verde-oscuro) !important;
       box-shadow: 0 6px 24px rgba(0,0,0,0.18) !important;
